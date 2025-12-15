@@ -14,6 +14,7 @@ import {
   Calendar
 } from 'lucide-react';
 import CuentasTableClient from './page-client';
+import PedidosWebComponent from './pedidos-web';
 
 interface Cuenta {
   id: number;
@@ -186,6 +187,16 @@ export default async function PedidosPage({
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Pedidos / Cuentas</h1>
         <p className="text-gray-600 mt-1">Gestiona todas las cuentas y pedidos del restaurante</p>
+      </div>
+
+      {/* Sección de Pedidos Web */}
+      <div className="border-t-2 border-purple-200 pt-6">
+        <PedidosWebComponent />
+      </div>
+
+      {/* Separador */}
+      <div className="border-t-2 border-gray-200 pt-6">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">Cuentas de Restaurante</h2>
       </div>
 
       {/* Estadísticas */}

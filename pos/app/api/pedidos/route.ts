@@ -552,7 +552,7 @@ export async function GET(request: NextRequest) {
     const estado = url.searchParams.get('estado');
 
     let query = `
-      SELECT p.id, p.numero_pedido, p.mesa_numero, p.es_para_llevar, p.estado, p.creado_en, p.total, p.observaciones, u.nombre as mesero_nombre
+      SELECT p.id, p.numero_pedido, p.mesa_numero, p.es_para_llevar, p.estado, p.creado_en, p.total, p.observaciones, p.origen, u.nombre as mesero_nombre
       FROM pedidos p
       LEFT JOIN usuarios u ON p.mesero_id = u.id
       WHERE 1=1

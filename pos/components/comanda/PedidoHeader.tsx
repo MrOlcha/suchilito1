@@ -10,6 +10,7 @@ interface PedidoHeaderProps {
   colorTiempo: string;
   tiempoLimite?: number;
   observaciones?: string;
+  origen?: string;
 }
 
 export function PedidoHeader({
@@ -21,7 +22,8 @@ export function PedidoHeader({
   tiempo,
   colorTiempo,
   tiempoLimite = 8,
-  observaciones
+  observaciones,
+  origen
 }: PedidoHeaderProps) {
   const tiempoDisplay = tiempo && tiempo !== '' ? tiempo : 'recién';
   
@@ -62,6 +64,11 @@ export function PedidoHeader({
       </div>
       
       <div className="flex items-center gap-2 mb-2 flex-wrap">
+        {origen === 'web' && (
+          <span className="bg-purple-100 text-purple-700 px-3 py-1.5 rounded text-sm font-bold flex items-center gap-1">
+            🌐 WEB
+          </span>
+        )}
         {es_para_llevar ? (
           <span className="bg-orange-100 text-orange-700 px-3 py-1.5 rounded text-sm font-bold flex items-center gap-1">
             <Package className="h-4 w-4" /> LLEVAR

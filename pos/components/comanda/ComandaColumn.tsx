@@ -124,6 +124,7 @@ export function ComandaColumn({
                   colorTiempo={getColorPorTiempo(pedido.creado_en)}
                   tiempoLimite={tiempoLimite}
                   observaciones={pedido.observaciones || ''}
+                  origen={pedido.origen}
                 />
 
                 {/* Items */}
