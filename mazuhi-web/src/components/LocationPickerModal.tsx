@@ -68,8 +68,8 @@ export default function LocationPickerModal({
 
   // Ubicación de la sucursal
   const SUCURSAL_LOCATION = {
-    lat: 20.6847,
-    lng: -100.3945,
+    lat: 20.6820,
+    lng: -100.3950,
     name: 'Mazuhi Sushi - Valle de Santiago',
     address: 'Valle Puerta del Sol 597, Valle de Santiago, 76116 Santiago de Querétaro, Qro.',
   };
@@ -438,13 +438,30 @@ export default function LocationPickerModal({
   };
 
   const handleConfirm = () => {
-    if (selectedLocation) {
-      onSelectLocation(
-        selectedLocation.address,
-        selectedLocation.lat,
-        selectedLocation.lng
-      );
-      onClose();
+    if (selectedLocation && coverageStatus?.within) {
+      // Desenfoque el input de búsqueda
+      if (searchInputRef.current) {
+        searchInputRef.current.blur();
+        LOG.info('✅ Search input blurred');
+      }
+      
+      // Scroll suave al botón de confirmación
+      const confirmButton = document.querySelector('[data-confirm-button]');
+      if (confirmButton) {
+        confirmButton.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        LOG.info('✅ Scrolled to confirm button');
+      }
+
+      // Pequeño delay para que se vea el efecto
+      setTimeout(() => {
+        onSelectLocation(
+          selectedLocation.address,
+          selectedLocation.lat,
+          selectedLocation.lng
+        );
+        onClose();
+        LOG.info('✅ Location confirmed and modal closed');
+      }, 300);
     }
   };
 
@@ -621,9 +638,10 @@ export default function LocationPickerModal({
                     Cancelar
                   </button>
                   <button
+                    data-confirm-button
                     onClick={handleConfirm}
                     disabled={!selectedLocation || loading || !!mapError || (coverageStatus ? !coverageStatus.within : false)}
-                    className="flex-1 px-4 py-2 rounded-lg bg-gradient-to-r from-green-400 to-green-500 text-white font-semibold hover:from-green-500 hover:to-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 px-4 py-2 rounded-lg bg-gradient-to-r from-green-400 to-green-500 text-white font-semibold hover:from-green-500 hover:to-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transform"
                   >
                     {coverageStatus && !coverageStatus.within ? 'Fuera de cobertura' : 'Confirmar Ubicación'}
                   </button>
