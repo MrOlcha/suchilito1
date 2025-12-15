@@ -42,6 +42,7 @@ export default function CheckoutModal({ isOpen, onClose, onComplete }: CheckoutM
   });
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const contentRef = React.useRef<HTMLDivElement>(null);
 
   // Cuando se abre el modal, verificar si hay usuario y configurar el paso inicial
   useEffect(() => {
@@ -307,7 +308,7 @@ export default function CheckoutModal({ isOpen, onClose, onComplete }: CheckoutM
               </div>
             </div>
 
-            <div className="p-8">
+            <div ref={contentRef} className="p-8">
               {/* Loading State */}
               {isLoading && (
                 <div className="flex items-center justify-center h-96">
@@ -399,12 +400,20 @@ export default function CheckoutModal({ isOpen, onClose, onComplete }: CheckoutM
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Pickup Option */}
                     <button
-                      onClick={() => updateCheckoutData({
-                        delivery: { type: 'pickup' }
-                      })}
+                      onClick={() => {
+                        updateCheckoutData({
+                          delivery: { type: 'pickup' }
+                        });
+                        // Auto-scroll to continue button on mobile
+                        setTimeout(() => {
+                          if (contentRef.current) {
+                            contentRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                          }
+                        }, 300);
+                      }}
                       className={`p-6 border-2 rounded-2xl transition-all text-left ${
                         checkoutData.delivery.type === 'pickup'
-                          ? 'border-orange-500 bg-orange-50'
+                          ? 'border-orange-500 bg-orange-50 ring-2 ring-orange-300'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
@@ -421,12 +430,20 @@ export default function CheckoutModal({ isOpen, onClose, onComplete }: CheckoutM
 
                     {/* Delivery Option */}
                     <button
-                      onClick={() => updateCheckoutData({
-                        delivery: { type: 'delivery', address: checkoutData.delivery.address || '' }
-                      })}
+                      onClick={() => {
+                        updateCheckoutData({
+                          delivery: { type: 'delivery', address: checkoutData.delivery.address || '' }
+                        });
+                        // Auto-scroll to continue button on mobile
+                        setTimeout(() => {
+                          if (contentRef.current) {
+                            contentRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                          }
+                        }, 300);
+                      }}
                       className={`p-6 border-2 rounded-2xl transition-all text-left ${
                         checkoutData.delivery.type === 'delivery'
-                          ? 'border-orange-500 bg-orange-50'
+                          ? 'border-orange-500 bg-orange-50 ring-2 ring-orange-300'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
@@ -441,6 +458,14 @@ export default function CheckoutModal({ isOpen, onClose, onComplete }: CheckoutM
                       </div>
                     </button>
                   </div>
+
+                  {/* Mobile Hint - Show after delivery type is selected */}
+                  {(checkoutData.delivery.type === 'pickup' || checkoutData.delivery.type === 'delivery') && (
+                    <div className="md:hidden mt-4 p-3 bg-blue-50 border border-blue-300 rounded-lg flex items-center gap-2">
+                      <span className="text-lg">👇</span>
+                      <p className="text-sm text-blue-700 font-medium">Pulsa "Continuar" abajo para avanzar</p>
+                    </div>
+                  )}
 
                   {/* Address Field for Delivery */}
                   {checkoutData.delivery.type === 'delivery' && (
@@ -699,11 +724,11 @@ export default function CheckoutModal({ isOpen, onClose, onComplete }: CheckoutM
               )}
 
                   {/* Navigation Buttons */}
-                  <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
+                  <div className="flex flex-col-reverse md:flex-row md:justify-between md:items-center gap-4 mt-8 pt-6 border-t border-gray-200">
                 <button
                   onClick={prevStep}
                   disabled={currentStep === 0}
-                  className="flex items-center px-6 py-3 text-gray-600 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="hidden md:flex items-center px-6 py-3 text-gray-600 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   <ChevronLeftIcon className="w-5 h-5 mr-1" />
                   Anterior
@@ -713,7 +738,7 @@ export default function CheckoutModal({ isOpen, onClose, onComplete }: CheckoutM
                   <button
                     onClick={nextStep}
                     disabled={isSubmitting}
-                    className="flex items-center px-8 py-3 bg-orange-600 text-white rounded-xl hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-105"
+                    className="w-full md:w-auto flex items-center justify-center px-8 py-3 md:py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-105 font-semibold text-lg md:text-base shadow-lg md:shadow-none"
                   >
                     {isSubmitting ? (
                       <>
@@ -731,7 +756,7 @@ export default function CheckoutModal({ isOpen, onClose, onComplete }: CheckoutM
                   <button
                     onClick={handleComplete}
                     disabled={isSubmitting}
-                    className="flex items-center px-8 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:opacity-50 transition-all transform hover:scale-105"
+                    className="w-full md:w-auto flex items-center justify-center px-8 py-3 md:py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 disabled:opacity-50 transition-all transform hover:scale-105 font-semibold text-lg md:text-base shadow-lg md:shadow-none"
                   >
                     {isSubmitting ? (
                       <>
