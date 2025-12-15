@@ -21,6 +21,6 @@
   "/ubicacion/page": "app/ubicacion/page.js",
   "/api/menu/route": "app/api/menu/route.js",
   "/api/promociones/route": "app/api/promociones/route.js",
-  "/facturacion/page": "app/facturacion/page.js",
-  "/api/sucursales/route": "app/api/sucursales/route.js"
+  "/api/sucursales/route": "app/api/sucursales/route.js",
+  "/facturacion/page": "app/facturacion/page.js"
 }

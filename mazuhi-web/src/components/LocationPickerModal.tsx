@@ -44,12 +44,17 @@ export default function LocationPickerModal({
 
   const initializeMap = async () => {
     try {
-      // Verificar que Google Maps esté disponible
-      if (!window.google || !window.google.maps) {
-        console.log('Esperando a Google Maps...');
-        // Reintentar en 500ms
-        setTimeout(initializeMap, 500);
-        return;
+      // Esperar a que Google Maps esté disponible
+      const maxAttempts = 30;
+      let attempts = 0;
+      
+      while (!window.google?.maps && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 300));
+        attempts++;
+      }
+
+      if (!window.google?.maps) {
+        throw new Error('Google Maps no pudo cargar. Intenta recargar la página.');
       }
 
       if (!mapRef.current) {
@@ -62,7 +67,7 @@ export default function LocationPickerModal({
 
       const defaultLocation = { lat: 24.2769, lng: -110.2708 }; // Mazatlán
 
-      // Crear mapa
+      // Crear mapa con opciones optimizadas
       const map = new window.google.maps.Map(mapRef.current, {
         zoom: 15,
         center: defaultLocation,
@@ -70,6 +75,8 @@ export default function LocationPickerModal({
         fullscreenControl: true,
         mapTypeControl: true,
         zoomControl: true,
+        minZoom: 10,
+        maxZoom: 18,
       });
 
       mapInstanceRef.current = map;
@@ -80,6 +87,7 @@ export default function LocationPickerModal({
         map: map,
         draggable: true,
         title: 'Tu ubicación',
+        animation: window.google.maps.Animation.DROP,
       });
 
       markerRef.current = marker;
@@ -93,9 +101,11 @@ export default function LocationPickerModal({
           if (response.results && response.results[0]) {
             const address = response.results[0].formatted_address;
             setSelectedLocation({ lat, lng, address });
+            console.log('📍 Ubicación actualizada:', address);
           }
         } catch (error) {
           console.error('Error geocoding:', error);
+          setSelectedLocation({ lat, lng, address: `${lat}, ${lng}` });
         }
       };
 
@@ -111,6 +121,7 @@ export default function LocationPickerModal({
         const lat = event.latLng.lat();
         const lng = event.latLng.lng();
         marker.setPosition({ lat, lng });
+        map.panTo({ lat, lng });
         updateAddress(lat, lng);
       });
 
@@ -120,7 +131,7 @@ export default function LocationPickerModal({
       setMapError(null);
     } catch (error) {
       console.error('Error inicializando mapa:', error);
-      setMapError('Error al cargar el mapa. Por favor, intenta nuevamente.');
+      setMapError(error instanceof Error ? error.message : 'Error al cargar el mapa. Por favor, intenta nuevamente.');
       setLoading(false);
     }
   };
@@ -177,14 +188,39 @@ export default function LocationPickerModal({
 
                 {/* Map Container */}
                 <div className="space-y-4 p-6">
-                  {loading ? (
-                    <div className="flex items-center justify-center h-96 bg-gray-100 rounded-lg">
+                  {loading && (
+                    <div className="flex items-center justify-center h-96 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border border-gray-300">
                       <div className="text-center">
-                        <div className="w-12 h-12 rounded-full border-4 border-orange-200 border-t-orange-500 animate-spin mx-auto mb-2"></div>
-                        <p className="text-gray-600">Cargando mapa...</p>
+                        <div className="relative w-16 h-16 mx-auto mb-4">
+                          <div className="absolute inset-0 rounded-full border-4 border-gray-200"></div>
+                          <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-orange-500 border-r-orange-400 animate-spin"></div>
+                        </div>
+                        <p className="text-gray-700 font-semibold mb-1">Cargando mapa...</p>
+                        <p className="text-sm text-gray-500">Esto puede tomar unos segundos</p>
                       </div>
                     </div>
-                  ) : (
+                  )}
+                  
+                  {mapError && (
+                    <div className="flex items-center justify-center h-96 bg-red-50 rounded-lg border border-red-300">
+                      <div className="text-center">
+                        <p className="text-red-700 font-semibold mb-2">Error al cargar el mapa</p>
+                        <p className="text-sm text-red-600 mb-4">{mapError}</p>
+                        <button
+                          onClick={() => {
+                            setLoading(true);
+                            setMapError(null);
+                            initializeMap();
+                          }}
+                          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+                        >
+                          Reintentar
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {!loading && !mapError && (
                     <>
                       <div
                         ref={mapRef}
