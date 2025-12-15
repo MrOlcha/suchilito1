@@ -88,23 +88,31 @@ export default function LocationPickerModal({
       return;
     }
 
-    if (!mapRef.current) {
-      LOG.warn('mapRef.current no disponible yet');
-      setLoading(true);
-      return;
-    }
-
-    LOG.info('✅ Modal opened, scheduling map initialization...');
+    LOG.info('✅ Modal opened, waiting for DOM to be ready...');
     
-    // Usar un pequeño delay para asegurar que el DOM está listo
-    const timer = setTimeout(() => {
-      LOG.info('⏳ Now initializing map...');
-      initializeMap();
+    // Esperar a que mapRef.current esté disponible (máximo 5 segundos)
+    let attempts = 0;
+    const maxAttempts = 50;
+    
+    const waitForMapRef = setInterval(() => {
+      attempts++;
+      
+      if (mapRef.current) {
+        clearInterval(waitForMapRef);
+        LOG.info(`📍 mapRef.current is now available (attempt ${attempts})`);
+        LOG.info('⏳ Now initializing map...');
+        initializeMap();
+      } else if (attempts >= maxAttempts) {
+        clearInterval(waitForMapRef);
+        LOG.error('❌ mapRef.current never became available');
+        setMapError('Error: El contenedor del mapa no se pudo renderizar');
+        setLoading(false);
+      }
     }, 100);
 
     return () => {
-      clearTimeout(timer);
-      LOG.debug('Cleanup: cleared initialization timer');
+      clearInterval(waitForMapRef);
+      LOG.debug('Cleanup: cleared mapRef interval');
     };
   }, [isOpen]);
 
