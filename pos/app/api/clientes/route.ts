@@ -31,17 +31,20 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { telefono, correo, fecha_nacimiento, nombre, pin } = body;
+    const { telefono, correo, fecha_nacimiento, nombre, pin, password } = body;
 
-    if (!telefono || !correo || !fecha_nacimiento || !nombre || !pin) {
+    // Aceptar PIN o password (para compatibilidad)
+    const pinOPassword = pin || password;
+
+    if (!telefono || !correo || !fecha_nacimiento || !nombre || !pinOPassword) {
       return NextResponse.json(
-        { message: 'Faltan datos requeridos (telefono, correo, fecha_nacimiento, nombre, pin)' },
+        { message: 'Faltan datos requeridos (telefono, correo, fecha_nacimiento, nombre, pin/password)' },
         { status: 400 }
       );
     }
 
-    // Validar que el PIN sea de 4 dígitos
-    if (!/^\d{4}$/.test(pin)) {
+    // Si es PIN, validar que sea de 4 dígitos
+    if (pin && !/^\d{4}$/.test(pin)) {
       return NextResponse.json(
         { message: 'El PIN debe ser de exactamente 4 dígitos' },
         { status: 400 }
@@ -72,8 +75,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Almacenar el PIN directamente (sin hash para PINs simples)
-    const pinAlmacenado = pin;
+    // Almacenar el PIN/password
+    const pinAlmacenado = pinOPassword;
 
     // Insertar nuevo cliente
     const stmt = db.prepare(`
