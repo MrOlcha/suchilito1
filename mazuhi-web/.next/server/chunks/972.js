@@ -1,0 +1,1 @@
+"use strict";exports.id=972,exports.ids=[972],exports.modules={76301:(e,t,r)=>{r.r(t),r.d(t,{$$typeof:()=>d,__esModule:()=>a,default:()=>i});var o=r(95153);let s=(0,o.createProxy)(String.raw`/var/www/mazuhi-web/src/components/Footer.tsx`),{__esModule:a,$$typeof:d}=s,u=s.default,i=u}};

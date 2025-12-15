@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-light text-dark;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-secondary text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors;
+  }
+
+  .btn-secondary {
+    @apply bg-primary text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors;
+  }
+
+  .input-field {
+    @apply border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary;
+  }
+
+  /* Hide scrollbar but allow scrolling */
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari and Opera */
+  }
+}
+
+@layer utilities {
+  .animate-pulse-slow {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  /* Force hide cart sidebar on mobile */
+  @media (max-width: 1279px) {
+    .mobile-hide-cart {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+  }
+}

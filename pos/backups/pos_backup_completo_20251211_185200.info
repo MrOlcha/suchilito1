@@ -1,0 +1,22 @@
+BACKUP COMPLETO DEL SISTEMA
+============================
+
+Fecha: $(date)
+Base de Datos: pos.db
+Items Activos: 50
+Categorías: 9
+Áreas: 3
+
+Contenido:
+- menu_items: 50 registros
+- menu_categorias: 9 registros
+- areas: 3 registros
+- Todas las demás tablas del sistema
+
+Este backup puede usarse para restaurar el sistema completo en caso de emergencia.
+
+Restauración:
+  1. Detener servidor: pm2 stop pos
+  2. Copiar: cp pos_backup_completo_*.db /var/www/pos/pos.db
+  3. Iniciar servidor: pm2 start pos
+  4. Verificar: curl http://localhost:3000/pos/api/health

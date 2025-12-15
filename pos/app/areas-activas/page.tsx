@@ -1,0 +1,1236 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useRouter } from 'next/navigation'
+import { 
+  ArrowLeft, 
+  RefreshCw, 
+  Clock, 
+  ChefHat, 
+  User, 
+  ShoppingBag,
+  Receipt,
+  Plus,
+  X,
+  CheckCircle2,
+  DollarSign,
+  Utensils,
+  AlertCircle,
+  Edit,
+  Trash2,
+  Shield
+} from 'lucide-react'
+import { API, PAGES, ROUTES, ESTADOS } from '@/lib/config'
+import PedidoEditCompleteModal from '@/components/caja/PedidoEditCompleteModal'
+import NotificacionesStack, { Notificacion } from '@/components/NotificacionesStack'
+
+interface CuentaActiva {
+  id: number
+  numero_cuenta: string
+  numero_pedido?: string
+  mesa_numero: number | string | null
+  mesero_nombre: string
+  total: number
+  total_pedidos: number
+  fecha_apertura: string
+  creado_en?: string
+  estado: string
+  es_para_llevar?: number
+  tipo?: 'cuenta' | 'pedido_llevar'
+}
+
+interface PedidoCuenta {
+  id: number
+  numero_pedido: string
+  es_para_llevar: number
+  estado: string
+  total: number
+  subtotal?: number
+  total_descuento?: number
+  descuentos_json?: string
+  creado_en: string
+  descuentosAplicados?: Array<{
+    promocionId: number
+    promocionNombre: string
+    descuentoTotal: number
+    cantidadItems: number
+    precioItemGratis: number
+  }>
+  items?: { 
+    nombre: string
+    cantidad: number
+    precio_unitario: number
+    descuento_aplicado?: number
+    notas?: string
+    especificaciones?: string
+  }[]
+}
+
+interface CuentaDetalle extends CuentaActiva {
+  pedidos: PedidoCuenta[]
+}
+
+export default function AreasActivasPage() {
+  const router = useRouter()
+  const [cuentasAbiertas, setCuentasAbiertas] = useState<CuentaActiva[]>([])
+  const [cuentasCerradas, setCuentasCerradas] = useState<CuentaActiva[]>([])
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [meseroNombre, setMeseroNombre] = useState('')
+  const [activeTab, setActiveTab] = useState<'mesa' | 'llevar' | 'cobrar'>('mesa')
+  
+  // Modal para ver detalle de cuenta
+  const [selectedCuenta, setSelectedCuenta] = useState<CuentaDetalle | null>(null)
+  const [showDetalleModal, setShowDetalleModal] = useState(false)
+  const [loadingDetalle, setLoadingDetalle] = useState(false)
+  
+  // Modal para cerrar cuenta
+  const [showCerrarModal, setShowCerrarModal] = useState(false)
+  const [cuentaACerrar, setCuentaACerrar] = useState<CuentaActiva | null>(null)
+  const [cerrando, setCerrando] = useState(false)
+
+  // Modal para editar pedido
+  const [showEditarModal, setShowEditarModal] = useState(false)
+  const [pedidoAEditar, setPedidoAEditar] = useState<PedidoCuenta | null>(null)
+  const [editando, setEditando] = useState(false)
+
+  // Modal para seleccionar tipo de pedido (comer/llevar)
+  const [showSelectTipoPedidoModal, setShowSelectTipoPedidoModal] = useState(false)
+  const [cuentaParaAgregarPedido, setCuentaParaAgregarPedido] = useState<CuentaActiva | null>(null)
+  
+  // Notificaciones
+  const [notificaciones, setNotificaciones] = useState<Notificacion[]>([])
+  const [ultimaCheckModificaciones, setUltimaCheckModificaciones] = useState<number>(0)
+
+  useEffect(() => {
+    const storedMesero = localStorage.getItem('pos_user')
+    if (storedMesero) {
+      try {
+        const mesero = JSON.parse(storedMesero)
+        setMeseroNombre(mesero.nombre || mesero.name || 'Mesero')
+      } catch (e) {
+        console.error('Error parsing mesero data:', e)
+      }
+    }
+    
+    fetchCuentas()
+    const interval = setInterval(fetchCuentas, 15000)
+    return () => clearInterval(interval)
+  }, [])
+
+  // Verificar si viene de agregar pedido exitosamente
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const success = urlParams.get('success')
+    
+    if (success === 'pedido_agregado') {
+      const pedidoData = localStorage.getItem('pedido_agregado_exito')
+      if (pedidoData) {
+        try {
+          const { numero_pedido, total } = JSON.parse(pedidoData)
+          addNotificacion({
+            id: `pedido-agregado-${Date.now()}`,
+            tipo: 'exito',
+            titulo: '✅ Pedido Agregado',
+            mensaje: `Se agregó ${numero_pedido} por $${total} a la cuenta`,
+            duracion: 5000
+          })
+          localStorage.removeItem('pedido_agregado_exito')
+          // Limpiar URL
+          window.history.replaceState({}, '', '/areas-activas')
+        } catch (error) {
+          console.error('Error parsing pedido data:', error)
+        }
+      }
+    }
+  }, [])
+
+  // Checkear modificaciones del mesero cada 5 segundos
+  useEffect(() => {
+    const checkModificaciones = async () => {
+      try {
+        const response = await fetch(`${API.MODIFICACIONES}?tipo=edicion_completa`)
+        if (response.ok) {
+          const modificaciones = await response.json() as any[]
+          
+          // Filtrar solo modificaciones que cambiaron de estado recientemente
+          const ahora = Date.now()
+          const modificacionesRecientes = modificaciones.filter(mod => {
+            if (!mod.fecha_autorizacion) return false // Solo aprobadas/rechazadas
+            const fecha = new Date(mod.fecha_autorizacion).getTime()
+            return ahora - fecha < 60000 // Últimos 60 segundos
+          })
+
+          // Mostrar notificaciones para cada modificación con estado cambio reciente
+          modificacionesRecientes.forEach(mod => {
+            if (mod.estado === 'aprobada' && mod.id > ultimaCheckModificaciones) {
+              const id = `notif-${mod.id}-aprobada`
+              if (!notificaciones.find(n => n.id === id)) {
+                addNotificacion({
+                  id,
+                  tipo: 'exito',
+                  titulo: '✅ Cambio Aprobado',
+                  mensaje: `Tu modificación en ${mod.pedido_numero} fue aprobada por caja`,
+                  duracion: 6000
+                })
+              }
+              setUltimaCheckModificaciones(Math.max(ultimaCheckModificaciones, mod.id))
+            } else if (mod.estado === 'rechazada' && mod.id > ultimaCheckModificaciones) {
+              const id = `notif-${mod.id}-rechazada`
+              if (!notificaciones.find(n => n.id === id)) {
+                addNotificacion({
+                  id,
+                  tipo: 'error',
+                  titulo: '❌ Cambio Rechazado',
+                  mensaje: `Tu modificación en ${mod.pedido_numero} fue rechazada. Revísala`,
+                  duracion: 6000
+                })
+              }
+              setUltimaCheckModificaciones(Math.max(ultimaCheckModificaciones, mod.id))
+            }
+          })
+        }
+      } catch (error) {
+        console.error('Error checking modificaciones:', error)
+      }
+    }
+
+    const interval = setInterval(checkModificaciones, 5000)
+    return () => clearInterval(interval)
+  }, [ultimaCheckModificaciones, notificaciones])
+
+  const addNotificacion = (notif: Notificacion) => {
+    setNotificaciones(prev => [...prev, notif])
+  }
+
+  const dismissNotificacion = (id: string) => {
+    setNotificaciones(prev => prev.filter(n => n.id !== id))
+  }
+
+  const fetchCuentas = async () => {
+    try {
+      // Usar el endpoint /areas-activas que devuelve cuentas + pedidos para llevar
+      const response = await fetch(API.AREAS_ACTIVAS)
+      if (response.ok) {
+        const data = await response.json()
+        const allItems = Array.isArray(data) ? data : data.data || []
+        
+        // Separar cuentas abiertas (tipo: cuenta, estado: abierta)
+        // Y cuentas cerradas (tipo: cuenta, estado: cerrada)
+        // También incluir pedidos para llevar (tipo: pedido_llevar, estado: pendiente)
+        const cuentasAbiertas = allItems.filter((item: any) => {
+          if (item.tipo === 'pedido_llevar') return item.estado === 'pendiente'
+          return item.estado === 'abierta'
+        })
+        
+        const cuentasCerradas = allItems.filter((item: any) => 
+          item.tipo === 'cuenta' && item.estado === 'cerrada'
+        )
+        
+        setCuentasAbiertas(cuentasAbiertas)
+        setCuentasCerradas(cuentasCerradas)
+      }
+    } catch (error) {
+      console.error('Error fetching cuentas:', error)
+    } finally {
+      setLoading(false)
+      setRefreshing(false)
+    }
+  }
+
+  const handleRefresh = () => {
+    setRefreshing(true)
+    fetchCuentas()
+  }
+
+  const fetchDetalleCuenta = async (cuentaId: number) => {
+    setLoadingDetalle(true)
+    try {
+      const response = await fetch(API.CUENTA_BY_ID(cuentaId))
+      if (response.ok) {
+        const result = await response.json()
+        // El API devuelve {success: true, data: {...}} o directamente {...}
+        const data = result.data || result
+        setSelectedCuenta(data)
+        setShowDetalleModal(true)
+      }
+    } catch (error) {
+      console.error('Error fetching cuenta detalle:', error)
+    } finally {
+      setLoadingDetalle(false)
+    }
+  }
+
+  const handleAddParaLlevar = (cuenta: CuentaActiva) => {
+    localStorage.setItem('mesa', JSON.stringify({
+      numero: cuenta.mesa_numero || 'LLEVAR',
+      cuentaId: cuenta.id,
+      numeroCuenta: cuenta.numero_cuenta
+    }))
+    router.push(ROUTES.atiendemeseroParaLlevar(cuenta.id))
+  }
+
+  const handleAgregarPedido = (cuenta: CuentaActiva) => {
+    // Si es una cuenta de llevar, directamente agregar para llevar
+    if (cuenta.es_para_llevar) {
+      handleAddParaLlevar(cuenta)
+      return
+    }
+    
+    // Si es una mesa, mostrar modal para elegir tipo de pedido
+    setCuentaParaAgregarPedido(cuenta)
+    setShowSelectTipoPedidoModal(true)
+  }
+
+  const handleSeleccionarTipoPedido = (esParaLlevar: boolean) => {
+    if (!cuentaParaAgregarPedido) return
+    
+    localStorage.setItem('mesa', JSON.stringify({
+      numero: cuentaParaAgregarPedido.mesa_numero,
+      cuentaId: cuentaParaAgregarPedido.id,
+      numeroCuenta: cuentaParaAgregarPedido.numero_cuenta
+    }))
+    
+    setShowSelectTipoPedidoModal(false)
+    
+    if (esParaLlevar) {
+      router.push(ROUTES.atiendemeseroParaLlevar(cuentaParaAgregarPedido.id))
+    } else {
+      // Para comer aquí: usar la ruta con mesa (mejor diseño)
+      router.push(PAGES.ATIENDEMESERO_MESA(cuentaParaAgregarPedido.mesa_numero))
+    }
+  }
+
+  const handleAddPedidoMesa = (cuenta: CuentaActiva) => {
+    localStorage.setItem('mesa', JSON.stringify({
+      numero: cuenta.mesa_numero,
+      cuentaId: cuenta.id,
+      numeroCuenta: cuenta.numero_cuenta
+    }))
+    router.push(ROUTES.atiendemeseroConCuenta(cuenta.id))
+  }
+
+  const handleCerrarCuenta = (cuenta: CuentaActiva) => {
+    setCuentaACerrar(cuenta)
+    setShowCerrarModal(true)
+  }
+
+  const confirmarCerrarCuenta = async () => {
+    if (!cuentaACerrar) return
+    
+    setCerrando(true)
+    try {
+      const response = await fetch(API.CUENTA_BY_ID(cuentaACerrar.id), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado: ESTADOS.CUENTA.CERRADA })
+      })
+      
+      if (response.ok) {
+        // Mover de abiertas a cerradas
+        setCuentasAbiertas(prev => prev.filter(c => c.id !== cuentaACerrar.id))
+        setCuentasCerradas(prev => [...prev, { ...cuentaACerrar, estado: ESTADOS.CUENTA.CERRADA }])
+        setShowCerrarModal(false)
+        setCuentaACerrar(null)
+      } else {
+        alert('Error al cerrar la cuenta')
+      }
+    } catch (error) {
+      console.error('Error cerrando cuenta:', error)
+      alert('Error al cerrar la cuenta')
+    } finally {
+      setCerrando(false)
+    }
+  }
+
+  const handleEditarPedido = (pedido: PedidoCuenta) => {
+    setPedidoAEditar(pedido)
+    setShowEditarModal(true)
+  }
+
+  const handleGuardarEdicion = async (editedData: any) => {
+    if (!pedidoAEditar || !selectedCuenta) return;
+
+    try {
+      // Detectar cambios en los items
+      const itemsAnteriores = pedidoAEditar.items || [];
+      const itemsNuevos = editedData.items || [];
+
+      // Crear detalle de cambios
+      const cambios = {
+        items_eliminados: itemsAnteriores.filter((item: any) => 
+          !itemsNuevos.find((nuevo: any) => nuevo.nombre === item.nombre && nuevo.cantidad === item.cantidad)
+        ),
+        items_modificados: itemsNuevos.filter((item: any) => {
+          const anterior = itemsAnteriores.find((a: any) => a.nombre === item.nombre);
+          return anterior && (
+            anterior.cantidad !== item.cantidad || 
+            anterior.precio_unitario !== item.precio_unitario ||
+            anterior.especificaciones !== item.especificaciones ||
+            anterior.notas !== item.notas
+          );
+        }).map((item: any) => ({
+          nombre: item.nombre,
+          anterior: itemsAnteriores.find((a: any) => a.nombre === item.nombre),
+          nuevo: item
+        })),
+        items_agregados: itemsNuevos.filter((item: any) =>
+          !itemsAnteriores.find((a: any) => a.nombre === item.nombre)
+        )
+      };
+
+      // Actualizar en BD
+      const response = await fetch(`${API.PEDIDOS}/${pedidoAEditar.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: editedData.items,
+          observaciones: editedData.observaciones
+        })
+      });
+
+      if (response.ok) {
+        // Crear modificación para caja - con detalles completos en cambios
+        const cambiosCompletos = {
+          ...cambios,
+          items_anteriores: itemsAnteriores,
+          items_nuevos: itemsNuevos
+        };
+
+        const modResponse = await fetch(API.MODIFICACIONES, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tipo: 'edicion_completa',
+            pedido_id: pedidoAEditar.id,
+            cuenta_id: selectedCuenta.id,
+            solicitado_por: 'mesero',
+            detalles: `Edición del pedido ${pedidoAEditar.numero_pedido}`,
+            cambios: JSON.stringify(cambiosCompletos)
+          })
+        });
+
+        // Refrescar datos
+        await fetchCuentas();
+        setShowEditarModal(false);
+        setPedidoAEditar(null);
+        
+        if (modResponse.ok) {
+          console.log('✅ Pedido actualizado y modificación enviada a caja');
+        } else {
+          const error = await modResponse.json();
+          console.error('⚠️ Modificación no registrada en caja:', error);
+        }
+      } else {
+        const error = await response.json();
+        alert(`Error: ${error.message || 'No se pudo actualizar el pedido'}`);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error al actualizar el pedido');
+    }
+  }
+
+  const handleEliminarPedido = async (pedido: PedidoCuenta) => {
+    if (!confirm(`¿Estás seguro de que quieres solicitar la eliminación del pedido ${pedido.numero_pedido}?`)) {
+      return
+    }
+
+    if (!selectedCuenta?.id) {
+      alert('Error: No hay cuenta seleccionada')
+      return
+    }
+
+    try {
+      // Crear petición de eliminación pendiente de autorización
+      const response = await fetch(API.MODIFICACIONES, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tipo: 'eliminacion',
+          pedido_id: pedido.id,
+          cuenta_id: selectedCuenta.id,
+          solicitado_por: 'mesero',
+          detalles: `Solicitud de eliminación del pedido ${pedido.numero_pedido}`,
+          cambios: JSON.stringify({ razon: 'Eliminación solicitada por mesero' })
+        })
+      })
+
+      if (response.ok) {
+        alert('✅ Petición de eliminación enviada. Espera autorización de caja.')
+        setShowDetalleModal(false)
+      } else {
+        alert('Error al enviar la petición')
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      alert('Error al procesar la petición')
+    }
+  }
+
+
+  const formatTime = (dateString: string) => {
+    if (!dateString) return '--:--'
+    
+    try {
+      // Si la fecha no tiene timezone, agregar Z para interpretarla como UTC
+      let date: Date
+      if (!dateString.includes('Z') && !dateString.includes('+') && !dateString.includes('-', 10)) {
+        date = new Date(dateString + 'Z')
+      } else {
+        date = new Date(dateString)
+      }
+      
+      if (isNaN(date.getTime())) return '--:--'
+      
+      return date.toLocaleTimeString('es-MX', { 
+        timeZone: 'America/Mexico_City',
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: true 
+      })
+    } catch (error) {
+      return '--:--'
+    }
+  }
+
+  const getTimeSince = (dateString: string) => {
+    if (!dateString) return '0 min'
+    
+    try {
+      // Si la fecha no tiene timezone, agregar Z para interpretarla como UTC
+      let start: Date
+      if (!dateString.includes('Z') && !dateString.includes('+') && !dateString.includes('-', 10)) {
+        start = new Date(dateString + 'Z')
+      } else {
+        start = new Date(dateString)
+      }
+      
+      if (isNaN(start.getTime())) return '0 min'
+      
+      const now = new Date()
+      const diffMs = now.getTime() - start.getTime()
+      const diffMins = Math.floor(diffMs / 60000)
+      
+      if (diffMins < 0) return 'recién'
+      if (diffMins < 1) return 'menos de 1 min'
+      if (diffMins < 60) return `${diffMins} min`
+      
+      const hours = Math.floor(diffMins / 60)
+      const mins = diffMins % 60
+      return `${hours}h ${mins}m`
+    } catch (error) {
+      return '0 min'
+    }
+  }
+
+  // Filtrar cuentas según el tab
+  // Para mesas: cuentas de tipo 'cuenta' con mesa_numero que no empiece con 'PL'
+  // Para llevar: cuentas de tipo 'cuenta' con mesa_numero que empiece con 'PL' + pedidos de tipo 'pedido_llevar'
+  const cuentasMesa = cuentasAbiertas.filter(c =>
+    c.tipo === 'cuenta' && c.mesa_numero && String(c.mesa_numero) !== 'PARA_LLEVAR' && !String(c.mesa_numero).startsWith('PL')
+  )
+  const cuentasLlevar = cuentasAbiertas.filter(c =>
+    (c.tipo === 'cuenta' && c.mesa_numero && String(c.mesa_numero).startsWith('PL')) ||
+    c.tipo === 'pedido_llevar'
+  );
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="w-12 h-12 text-blue-400 animate-spin mx-auto mb-4" />
+          <p className="text-white text-lg">Cargando cuentas activas...</p>
+        </div>
+      </div>
+    )
+  }
+
+  const renderCuentaCard = (cuenta: CuentaActiva, isPorCobrar: boolean = false) => (
+    <motion.div
+      key={cuenta.id}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      className={`backdrop-blur-sm rounded-xl p-3 border transition-all hover:shadow-lg ${
+        isPorCobrar 
+          ? 'bg-yellow-500/20 border-yellow-400/40 hover:border-yellow-400/60' 
+          : cuenta.mesa_numero && cuenta.mesa_numero !== 'PARA_LLEVAR'
+            ? 'bg-blue-500/20 border-blue-400/40 hover:border-blue-400/60'
+            : 'bg-orange-500/20 border-orange-400/40 hover:border-orange-400/60'
+      }`}
+    >
+      {/* Header compacto */}
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0 ${
+            isPorCobrar 
+              ? 'bg-yellow-500 text-white'
+              : cuenta.mesa_numero && cuenta.mesa_numero !== 'PARA_LLEVAR'
+                ? 'bg-blue-500 text-white'
+                : 'bg-orange-500 text-white'
+          }`}>
+            {cuenta.mesa_numero && String(cuenta.mesa_numero).startsWith('PL') ? (
+              <ShoppingBag className="w-5 h-5" />
+            ) : cuenta.tipo === 'pedido_llevar' ? (
+              <ShoppingBag className="w-5 h-5" />
+            ) : (
+              cuenta.mesa_numero
+            )}
+          </div>
+          <div className="min-w-0">
+            <h3 className="text-white font-semibold text-sm truncate">
+              {cuenta.mesa_numero && String(cuenta.mesa_numero).startsWith('PL')
+                ? cuenta.mesa_numero
+                : cuenta.tipo === 'pedido_llevar'
+                  ? cuenta.numero_pedido
+                  : cuenta.numero_cuenta}
+            </h3>
+            <p className="text-white/60 text-xs truncate">
+              {cuenta.mesero_nombre}
+            </p>
+          </div>
+        </div>
+        
+        <div className="text-right flex-shrink-0">
+          <p className="text-green-400 font-bold text-sm">
+            ${(cuenta.total || 0).toFixed(2)}
+          </p>
+          {cuenta.tipo !== 'pedido_llevar' && (
+            <p className="text-white/60 text-xs">
+              {cuenta.total_pedidos} ped.
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Info compacta */}
+      {!isPorCobrar && (
+        <div className="text-white/60 text-xs mb-2 px-1">
+          {formatTime(cuenta.tipo === 'pedido_llevar' ? (cuenta.creado_en || cuenta.fecha_apertura) : cuenta.fecha_apertura)} • {getTimeSince(cuenta.tipo === 'pedido_llevar' ? (cuenta.creado_en || cuenta.fecha_apertura) : cuenta.fecha_apertura)}
+        </div>
+      )}
+
+      {/* Botones */}
+      {isPorCobrar ? (
+        <button
+          onClick={() => fetchDetalleCuenta(cuenta.id)}
+          disabled={loadingDetalle}
+          className="w-full bg-yellow-600 hover:bg-yellow-500 text-white py-2 px-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm"
+        >
+          <Receipt className="w-4 h-4" />
+          <span>Ver Detalle</span>
+        </button>
+      ) : cuenta.tipo === 'pedido_llevar' ? (
+        // Para pedidos para llevar, solo mostrar botón de ver detalle
+        <button
+          onClick={() => fetchDetalleCuenta(cuenta.id)}
+          disabled={loadingDetalle}
+          className="w-full bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm"
+          title="Ver detalles del pedido"
+        >
+          <Receipt className="w-4 h-4" />
+          <span>Ver Pedido</span>
+        </button>
+      ) : (
+        // Para cuentas de mesa
+        <div className="grid grid-cols-3 gap-1">
+          <button
+            onClick={() => fetchDetalleCuenta(cuenta.id)}
+            disabled={loadingDetalle}
+            className="bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg flex items-center justify-center transition-colors"
+            title="Ver detalles"
+          >
+            <Receipt className="w-4 h-4" />
+          </button>
+          
+          <button
+            onClick={() => handleAgregarPedido(cuenta)}
+            className="bg-green-600 hover:bg-green-500 text-white py-2 rounded-lg flex items-center justify-center transition-colors"
+            title="Agregar item"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+          
+          <button
+            onClick={() => handleCerrarCuenta(cuenta)}
+            className="bg-purple-600 hover:bg-purple-500 text-white py-2 rounded-lg flex items-center justify-center transition-colors"
+            title="Cerrar cuenta"
+          >
+            <CheckCircle2 className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+    </motion.div>
+  )
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 pb-24">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-800 to-blue-600 text-white p-4 shadow-lg">
+        <div className="flex items-center justify-between">
+          <button 
+            onClick={() => router.push(PAGES.ATIENDEMESERO)}
+            className="p-2 hover:bg-white/20 rounded-full transition-colors"
+          >
+            <ArrowLeft className="w-6 h-6" />
+          </button>
+          
+          <div className="text-center flex-1">
+            <h1 className="text-xl font-bold">Áreas Activas</h1>
+            <p className="text-blue-200 text-sm">{meseroNombre}</p>
+          </div>
+          
+          <button 
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="p-2 hover:bg-white/20 rounded-full transition-colors"
+          >
+            <RefreshCw className={`w-6 h-6 ${refreshing ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="bg-slate-800/50 p-2 mx-4 mt-4 rounded-xl flex gap-2">
+        <button
+          onClick={() => setActiveTab('mesa')}
+          className={`flex-1 py-3 px-4 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
+            activeTab === 'mesa' 
+              ? 'bg-blue-600 text-white' 
+              : 'text-white/70 hover:bg-white/10'
+          }`}
+        >
+          <Utensils className="w-5 h-5" />
+          <span>Mesas</span>
+          {cuentasMesa.length > 0 && (
+            <span className="bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full">
+              {cuentasMesa.length}
+            </span>
+          )}
+        </button>
+        
+        <button
+          onClick={() => setActiveTab('llevar')}
+          className={`flex-1 py-3 px-4 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
+            activeTab === 'llevar' 
+              ? 'bg-orange-600 text-white' 
+              : 'text-white/70 hover:bg-white/10'
+          }`}
+        >
+          <ShoppingBag className="w-5 h-5" />
+          <span>Llevar</span>
+          {cuentasLlevar.length > 0 && (
+            <span className="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">
+              {cuentasLlevar.length}
+            </span>
+          )}
+        </button>
+        
+        <button
+          onClick={() => setActiveTab('cobrar')}
+          className={`flex-1 py-3 px-4 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
+            activeTab === 'cobrar' 
+              ? 'bg-yellow-600 text-white' 
+              : 'text-white/70 hover:bg-white/10'
+          }`}
+        >
+          <DollarSign className="w-5 h-5" />
+          <span>Cobrar</span>
+          {cuentasCerradas.length > 0 && (
+            <span className="bg-yellow-500 text-white text-xs px-2 py-0.5 rounded-full animate-pulse">
+              {cuentasCerradas.length}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* Lista de Cuentas */}
+      <div className="p-4">
+        {activeTab === 'mesa' && (
+          <>
+            {cuentasMesa.length === 0 ? (
+              <div className="text-center py-16">
+                <Utensils className="w-20 h-20 text-blue-400/50 mx-auto mb-4" />
+                <p className="text-white/70 text-lg">No hay mesas activas</p>
+                <p className="text-white/50 text-sm mt-2">Las cuentas se crean al tomar pedidos</p>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                <AnimatePresence>
+                  {cuentasMesa.map((cuenta) => renderCuentaCard(cuenta))}
+                </AnimatePresence>
+              </div>
+            )}
+          </>
+        )}
+
+        {activeTab === 'llevar' && (
+          <>
+            {cuentasLlevar.length === 0 ? (
+              <div className="text-center py-16">
+                <ShoppingBag className="w-20 h-20 text-orange-400/50 mx-auto mb-4" />
+                <p className="text-white/70 text-lg">No hay pedidos para llevar</p>
+                <p className="text-white/50 text-sm mt-2">Las cuentas se crean al tomar pedidos para llevar</p>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                <AnimatePresence>
+                  {cuentasLlevar.map((cuenta) => renderCuentaCard(cuenta))}
+                </AnimatePresence>
+              </div>
+            )}
+          </>
+        )}
+
+        {activeTab === 'cobrar' && (
+          <>
+            {cuentasCerradas.length === 0 ? (
+              <div className="text-center py-16">
+                <DollarSign className="w-20 h-20 text-yellow-400/50 mx-auto mb-4" />
+                <p className="text-white/70 text-lg">No hay cuentas por cobrar</p>
+                <p className="text-white/50 text-sm mt-2">Las cuentas cerradas aparecerán aquí</p>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                <AnimatePresence>
+                  {cuentasCerradas.map((cuenta) => renderCuentaCard(cuenta, true))}
+                </AnimatePresence>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Modal Detalle de Cuenta */}
+      <AnimatePresence>
+        {showDetalleModal && selectedCuenta && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center"
+            onClick={() => setShowDetalleModal(false)}
+          >
+            <motion.div
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 100, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-slate-800 w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[85vh] overflow-hidden"
+            >
+              <div className="bg-blue-600 p-4 flex items-center justify-between">
+                <div>
+                  <h2 className="text-white font-bold text-lg">{selectedCuenta.numero_cuenta}</h2>
+                  <p className="text-blue-200 text-sm">
+                    {selectedCuenta.mesa_numero && selectedCuenta.mesa_numero !== 'LLEVAR' 
+                      ? `Mesa ${selectedCuenta.mesa_numero}` 
+                      : 'Para Llevar'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowDetalleModal(false)}
+                  className="p-2 hover:bg-white/20 rounded-full"
+                >
+                  <X className="w-6 h-6 text-white" />
+                </button>
+              </div>
+
+              <div className="p-4 overflow-y-auto max-h-[50vh]">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-white font-semibold">Pedidos en esta cuenta:</h3>
+                  <span className="text-blue-300 text-sm">
+                    👤 {selectedCuenta.mesero_nombre}
+                  </span>
+                </div>
+                
+                {selectedCuenta.pedidos && selectedCuenta.pedidos.length > 0 ? (
+                  <div className="space-y-4">
+                    {/* Pedidos para comer */}
+                    {selectedCuenta.pedidos.filter(p => !p.es_para_llevar).length > 0 && (
+                      <div className="mb-4">
+                        <h4 className="text-blue-300 text-sm font-medium mb-3 flex items-center gap-2 bg-blue-500/10 p-2 rounded-lg">
+                          <Utensils className="w-4 h-4" />
+                          🍽️ Para comer aquí
+                        </h4>
+                        {selectedCuenta.pedidos.filter(p => !p.es_para_llevar).map((pedido) => (
+                          <div
+                            key={pedido.id}
+                            className="bg-blue-500/20 rounded-xl p-4 border border-blue-400/30 mb-3"
+                          >
+                            <div className="flex items-center justify-between mb-3 pb-2 border-b border-blue-400/20">
+                              <div>
+                                <span className="text-white font-bold text-lg">
+                                  {pedido.numero_pedido}
+                                </span>
+                                <p className="text-blue-300 text-xs">
+                                  {formatTime(pedido.creado_en)}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                                  pedido.estado === ESTADOS.PEDIDO.PENDIENTE ? 'bg-yellow-500 text-yellow-900' :
+                                  pedido.estado === ESTADOS.PEDIDO.PREPARANDO ? 'bg-blue-500 text-white' :
+                                  pedido.estado === ESTADOS.PEDIDO.LISTO ? 'bg-green-500 text-white' :
+                                  'bg-gray-500 text-white'
+                                }`}>
+                                  {pedido.estado?.toUpperCase()}
+                                </span>
+                                <div className="flex gap-1">
+                                  <button
+                                    onClick={() => handleEditarPedido(pedido)}
+                                    className="p-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
+                                    title="Editar pedido"
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleEliminarPedido(pedido)}
+                                    className="p-2 bg-red-600 hover:bg-red-500 text-white rounded-lg transition-colors"
+                                    title="Eliminar pedido"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Items del pedido */}
+                            {pedido.items && pedido.items.length > 0 ? (
+                              <div className="space-y-2 mb-3">
+                                {pedido.items.map((item, idx) => (
+                                  <div key={idx} className="bg-slate-700/50 rounded-lg p-3">
+                                    <div className="flex justify-between items-start">
+                                      <div className="flex-1">
+                                        <p className="text-white font-medium">
+                                          <span className="text-blue-400 font-bold">{item.cantidad}x</span> {item.nombre}
+                                        </p>
+                                        {(item.notas || item.especificaciones) && (
+                                          <p className="text-yellow-300 text-xs mt-1 italic">
+                                            📝 {item.notas || item.especificaciones}
+                                          </p>
+                                        )}
+                                      </div>
+                                      <span className="text-green-400 font-semibold ml-2">
+                                        ${(item.cantidad * item.precio_unitario).toFixed(2)}
+                                      </span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-white/50 text-sm italic">Sin detalles</p>
+                            )}
+                            
+                            {/* Mostrar promociones aplicadas */}
+                            {pedido.descuentosAplicados && pedido.descuentosAplicados.length > 0 && (
+                              <div className="mt-3 p-3 bg-green-500/20 border border-green-400/30 rounded-lg">
+                                <p className="text-green-300 text-xs font-bold mb-2">🎉 Promociones Aplicadas:</p>
+                                {pedido.descuentosAplicados.map((desc, idx) => (
+                                  <div key={idx} className="text-xs text-green-200 mb-1">
+                                    <strong>{desc.promocionNombre}</strong> - {desc.cantidadItems} item{desc.cantidadItems > 1 ? 's' : ''} gratis
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            
+                            <div className="text-right pt-2 border-t border-blue-400/20">
+                              {pedido.subtotal ? (
+                                <>
+                                  <div className="mb-2">
+                                    <span className="text-white/70 text-sm">Subtotal: </span>
+                                    <span className="text-white font-semibold">
+                                      ${(pedido.subtotal || 0).toFixed(2)}
+                                    </span>
+                                  </div>
+                                  {pedido.total_descuento ? (
+                                    <div className="mb-2">
+                                      <span className="text-green-300 text-sm">Descuento: </span>
+                                      <span className="text-green-400 font-semibold">
+                                        -${(pedido.total_descuento || 0).toFixed(2)}
+                                      </span>
+                                    </div>
+                                  ) : null}
+                                </>
+                              ) : null}
+                              <span className="text-white/70 text-sm">Total: </span>
+                              <span className="text-green-400 font-bold text-lg">
+                                ${(pedido.total || 0).toFixed(2)}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Pedidos para llevar */}
+                    {selectedCuenta.pedidos.filter(p => p.es_para_llevar).length > 0 && (
+                      <div>
+                        <h4 className="text-orange-300 text-sm font-medium mb-3 flex items-center gap-2 bg-orange-500/10 p-2 rounded-lg">
+                          <ShoppingBag className="w-4 h-4" />
+                          🛍️ Para llevar
+                        </h4>
+                        {selectedCuenta.pedidos.filter(p => p.es_para_llevar).map((pedido) => (
+                          <div
+                            key={pedido.id}
+                            className="bg-orange-500/20 rounded-xl p-4 border border-orange-400/30 mb-3"
+                          >
+                            <div className="flex items-center justify-between mb-3 pb-2 border-b border-orange-400/20">
+                              <div>
+                                <span className="text-white font-bold text-lg">
+                                  {pedido.numero_pedido}
+                                </span>
+                                <p className="text-orange-300 text-xs">
+                                  {formatTime(pedido.creado_en)}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                                  pedido.estado === ESTADOS.PEDIDO.PENDIENTE ? 'bg-yellow-500 text-yellow-900' :
+                                  pedido.estado === ESTADOS.PEDIDO.PREPARANDO ? 'bg-blue-500 text-white' :
+                                  pedido.estado === ESTADOS.PEDIDO.LISTO ? 'bg-green-500 text-white' :
+                                  'bg-gray-500 text-white'
+                                }`}>
+                                  {pedido.estado?.toUpperCase()}
+                                </span>
+                                <div className="flex gap-1">
+                                  <button
+                                    onClick={() => handleEditarPedido(pedido)}
+                                    className="p-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
+                                    title="Editar pedido"
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleEliminarPedido(pedido)}
+                                    className="p-2 bg-red-600 hover:bg-red-500 text-white rounded-lg transition-colors"
+                                    title="Eliminar pedido"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Items del pedido */}
+                            {pedido.items && pedido.items.length > 0 ? (
+                              <div className="space-y-2 mb-3">
+                                {pedido.items.map((item, idx) => (
+                                  <div key={idx} className="bg-slate-700/50 rounded-lg p-3">
+                                    <div className="flex justify-between items-start">
+                                      <div className="flex-1">
+                                        <p className="text-white font-medium">
+                                          <span className="text-orange-400 font-bold">{item.cantidad}x</span> {item.nombre}
+                                        </p>
+                                        {(item.notas || item.especificaciones) && (
+                                          <p className="text-yellow-300 text-xs mt-1 italic">
+                                            📝 {item.notas || item.especificaciones}
+                                          </p>
+                                        )}
+                                      </div>
+                                      <span className="text-green-400 font-semibold ml-2">
+                                        ${(item.cantidad * item.precio_unitario).toFixed(2)}
+                                      </span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-white/50 text-sm italic">Sin detalles</p>
+                            )}
+                            
+                            {/* Mostrar promociones aplicadas */}
+                            {pedido.descuentosAplicados && pedido.descuentosAplicados.length > 0 && (
+                              <div className="mt-3 p-3 bg-green-500/20 border border-green-400/30 rounded-lg">
+                                <p className="text-green-300 text-xs font-bold mb-2">🎉 Promociones Aplicadas:</p>
+                                {pedido.descuentosAplicados.map((desc, idx) => (
+                                  <div key={idx} className="text-xs text-green-200 mb-1">
+                                    <strong>{desc.promocionNombre}</strong> - {desc.cantidadItems} item{desc.cantidadItems > 1 ? 's' : ''} gratis
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            
+                            <div className="text-right pt-2 border-t border-orange-400/20">
+                              {pedido.subtotal ? (
+                                <>
+                                  <div className="mb-2">
+                                    <span className="text-white/70 text-sm">Subtotal: </span>
+                                    <span className="text-white font-semibold">
+                                      ${(pedido.subtotal || 0).toFixed(2)}
+                                    </span>
+                                  </div>
+                                  {pedido.total_descuento ? (
+                                    <div className="mb-2">
+                                      <span className="text-green-300 text-sm">Descuento: </span>
+                                      <span className="text-green-400 font-semibold">
+                                        -${(pedido.total_descuento || 0).toFixed(2)}
+                                      </span>
+                                    </div>
+                                  ) : null}
+                                </>
+                              ) : null}
+                              <span className="text-white/70 text-sm">Total: </span>
+                              <span className="text-green-400 font-bold text-lg">
+                                ${(pedido.total || 0).toFixed(2)}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-white/50 text-center py-4">No hay pedidos aún</p>
+                )}
+              </div>
+
+              <div className="border-t border-white/20 p-4 bg-slate-900">
+                <div className="flex items-center justify-between text-white">
+                  <span className="font-semibold">Total de la cuenta:</span>
+                  <span className="text-2xl font-bold text-green-400">
+                    ${(selectedCuenta.total || 0).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal Confirmar Cerrar Cuenta */}
+      <AnimatePresence>
+        {showCerrarModal && cuentaACerrar && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setShowCerrarModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-slate-800 rounded-2xl p-6 max-w-sm w-full"
+            >
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle2 className="w-8 h-8 text-purple-400" />
+                </div>
+                <h3 className="text-white text-xl font-bold mb-2">¿Cerrar Cuenta?</h3>
+                <p className="text-white/70">
+                  {cuentaACerrar.numero_cuenta}
+                </p>
+                <p className="text-white/50 text-sm">
+                  {cuentaACerrar.mesa_numero && cuentaACerrar.mesa_numero !== 'LLEVAR' 
+                    ? `Mesa ${cuentaACerrar.mesa_numero}` 
+                    : 'Para Llevar'}
+                </p>
+                <p className="text-green-400 font-bold text-2xl mt-2">
+                  ${(cuentaACerrar.total || 0).toFixed(2)}
+                </p>
+              </div>
+              
+              <p className="text-white/60 text-sm text-center mb-6">
+                Al cerrar la cuenta, pasará a <strong className="text-yellow-400">caja para cobro</strong>. 
+                No se podrán agregar más pedidos.
+              </p>
+
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => setShowCerrarModal(false)}
+                  className="bg-white/10 hover:bg-white/20 text-white py-3 rounded-xl font-medium transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={confirmarCerrarCuenta}
+                  disabled={cerrando}
+                  className="bg-purple-600 hover:bg-purple-500 text-white py-3 rounded-xl font-medium transition-colors disabled:opacity-50"
+                >
+                  {cerrando ? 'Cerrando...' : 'Confirmar'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal Seleccionar Tipo de Pedido */}
+      <AnimatePresence>
+        {showSelectTipoPedidoModal && cuentaParaAgregarPedido && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center"
+            onClick={() => setShowSelectTipoPedidoModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-slate-800 rounded-2xl p-6 max-w-sm w-full mx-4 border border-slate-700"
+            >
+              <h2 className="text-xl font-bold text-white mb-4">¿Qué tipo de pedido deseas agregar?</h2>
+              
+              <div className="space-y-3">
+                <button
+                  onClick={() => handleSeleccionarTipoPedido(false)}
+                  className="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
+                >
+                  <Utensils className="w-5 h-5" />
+                  Para Comer Aquí (en la mesa)
+                </button>
+                
+                <button
+                  onClick={() => handleSeleccionarTipoPedido(true)}
+                  className="w-full bg-orange-600 hover:bg-orange-500 text-white py-4 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
+                >
+                  <ShoppingBag className="w-5 h-5" />
+                  Para Llevar
+                </button>
+              </div>
+              
+              <button
+                onClick={() => setShowSelectTipoPedidoModal(false)}
+                className="w-full mt-4 bg-white/10 hover:bg-white/20 text-white py-3 rounded-xl font-medium transition-colors"
+              >
+                Cancelar
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal Editar Pedido */}
+      <AnimatePresence>
+        {/* Modal Editar Pedido - Nuevo Sistema Robusto */}
+        {selectedCuenta && pedidoAEditar && (
+          <PedidoEditCompleteModal
+            show={showEditarModal}
+            onClose={() => {
+              setShowEditarModal(false)
+              setPedidoAEditar(null)
+            }}
+            onSave={handleGuardarEdicion}
+            pedido={pedidoAEditar}
+            cuenta={selectedCuenta as any}
+            loading={editando}
+          />
+        )}
+      </AnimatePresence>
+      
+      {/* Notificaciones */}
+      <NotificacionesStack 
+        notificaciones={notificaciones}
+        onDismiss={dismissNotificacion}
+      />
+    </div>
+  )
+}
+

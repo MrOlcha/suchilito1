@@ -1,0 +1,8 @@
+1|admin|$2a$10$mCOuN9qAZLywBCuarsQcJe/mmDtmEf4RzWOomwqAUHy7P0Vu8OaD.|Mr. Olcha|admin|1|2025-12-03 15:03:27
+2|mesero|$2a$10$hopIfA7HjjdW4/t7kQ1NO.vq7fWSeCyUze5qRPZL1BDCNj5gb8l3i|Mesero|admin|1|2025-12-03 15:03:27
+3|angel|$2a$10$5jlxlTPpQh6NqgyljSdUFOtxarX.LpQHlGQaPJ1imaNbQ0tcKACuO|angel|admin|1|2025-12-03 15:23:34
+4|angel_mesero|$2a$10$h1DJik/Ou1PQ3lAO4PKSle40t9Pvl.5LRI3Xi2mF4klZYJ47FO.xC|Angel|mesero|1|2025-12-04 02:45:42
+5|jhayco|$2a$10$otOxzDZLdz3jHuCgQNF2S.aI2QWbFzuCQ6cN7xFOGk5h3.twwIiHa|jhayco|mesero|1|2025-12-04 11:41:29
+6|olcha|$2a$10$UUCC/kLSSqAPooZD83w12.wEUQ0oTspP3WVsy03gwxd1I2dN/tXTe|olcha|mesero|1|2025-12-05 14:39:48
+7|flaco|$2a$10$OvDMqTJojp9pGU0QQeAs4.MIwwyHTR//XtCiqLHWMlZKBKgV5iyPa|Flaco|mesero|1|2025-12-05 19:53:19
+8|said|$2a$10$eldTp6Ovm.RS178TulS2Vu1rJVcUxJnMeKVyL3yJn7uLcyXmzZ5UO|said|mesero|1|2025-12-06 21:19:30

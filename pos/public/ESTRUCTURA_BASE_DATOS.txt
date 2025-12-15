@@ -1,0 +1,630 @@
+================================================================================
+                    ESTRUCTURA COMPLETA DE LA BASE DE DATOS
+                              POS SYSTEM - pos.db
+================================================================================
+Fecha de generación: 07/12/2025 00:12:47
+================================================================================
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ TABLA: caja
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+--- ESTRUCTURA (SCHEMA) ---
+  • id: INTEGER NULL PRIMARY KEY
+  • usuario_id: INTEGER NOT NULL
+  • fecha_apertura: DATETIME NULL
+  • fecha_cierre: DATETIME NULL
+  • monto_inicial: DECIMAL(10,2) NULL
+  • monto_final: DECIMAL(10,2) NULL
+  • total_ventas: DECIMAL(10,2) NULL
+  • estado: TEXT NULL
+  • observaciones: TEXT NULL
+
+--- INFORMACIÓN GENERAL ---
+Total de registros: 0
+
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ TABLA: categorias
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+--- ESTRUCTURA (SCHEMA) ---
+  • id: INTEGER NULL PRIMARY KEY
+  • nombre: TEXT NOT NULL
+  • descripcion: TEXT NULL
+  • activo: INTEGER NULL
+  • creado_en: DATETIME NULL
+
+--- INFORMACIÓN GENERAL ---
+Total de registros: 0
+
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ TABLA: cuentas
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+--- ESTRUCTURA (SCHEMA) ---
+  • id: INTEGER NULL PRIMARY KEY
+  • numero_cuenta: TEXT NOT NULL
+  • mesa_numero: TEXT NULL
+  • mesero_id: INTEGER NULL
+  • estado: TEXT NULL
+  • total: DECIMAL(10,2) NULL
+  • fecha_apertura: DATETIME NULL
+  • fecha_cierre: DATETIME NULL
+  • metodo_pago: TEXT NULL
+  • total_cobrado: DECIMAL(10,2) NULL
+
+--- INFORMACIÓN GENERAL ---
+Total de registros: 6
+
+--- PRIMEROS REGISTROS (máximo 10) ---
+
+id | numero_cuenta | mesa_numero | mesero_id | estado | total | fecha_apertura | fecha_cierre | metodo_pago | total_cobrado
+------------------------------------------------------------------------------------------------------------------------------------------------------
+28 | Cuenta 004 | PL-1764974759671 | 4 | cobrada | 270 | 2025-12-05 22:46:00 | NULL | cash | 270
+29 | Cuenta 005 | PL-1764975792989 | 4 | cobrada | 647 | 2025-12-05 23:03:13 | NULL | cash | 647
+55 | Cuenta 006 | 2 | 4 | cobrada | 594 | 2025-12-06 20:56:05 | NULL | cash | 594
+56 | Cuenta 007 | 3 | 4 | cobrada | 768 | 2025-12-06 21:00:01 | NULL | card | 768
+57 | Cuenta 008 | PL-1765056875499 | 4 | cobrada | 238 | 2025-12-06 21:34:36 | NULL | cash | 238
+64 | Cuenta 009 | 2 | 4 | abierta | 468 | 2025-12-06 17:12:14 | NULL | NULL | NULL
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ TABLA: detalle_pedidos
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+--- ESTRUCTURA (SCHEMA) ---
+  • id: INTEGER NULL PRIMARY KEY
+  • pedido_id: INTEGER NOT NULL
+  • menu_item_id: INTEGER NULL
+  • producto_nombre: TEXT NULL
+  • cantidad: INTEGER NOT NULL
+  • especificaciones: TEXT NULL
+  • notas: TEXT NULL
+  • precio_unitario: DECIMAL(10,2) NULL
+  • subtotal: DECIMAL(10,2) NULL
+  • creado_en: DATETIME NULL
+
+--- INFORMACIÓN GENERAL ---
+Total de registros: 25
+
+--- PRIMEROS REGISTROS (máximo 10) ---
+
+id | pedido_id | menu_item_id | producto_nombre | cantidad | especificaciones | notas | precio_unitario | subtotal | creado_en
+------------------------------------------------------------------------------------------------------------------------------------------------------
+75 | 50 | 315 | Philadelphia | 1 | De pollo adentro |  | 135 | 135 | 2025-12-05 22:46:00
+76 | 50 | 315 | Philadelphia | 1 |  |  | 135 | 135 | 2025-12-05 22:46:00
+77 | 51 | 317 | Bandera Roll | 1 |  |  | 149 | 149 | 2025-12-05 23:03:13
+78 | 51 | 332 | Olcha | 1 |  |  | 200 | 200 | 2025-12-05 23:03:13
+79 | 51 | 304 | Crab Balls | 1 |  |  | 139 | 139 | 2025-12-05 23:03:13
+80 | 51 | 323 | Mazuhi | 1 |  |  | 159 | 159 | 2025-12-05 23:03:13
+140 | 87 | 315 | Philadelphia | 1 |  |  | 135 | 135 | 2025-12-06 20:56:05
+141 | 87 | 330 | Avocado Especial | 1 |  |  | 175 | 175 | 2025-12-06 20:56:05
+142 | 87 | 317 | Bandera Roll | 1 |  |  | 149 | 149 | 2025-12-06 20:56:05
+143 | 87 | 344 | Coca Cola | 1 |  |  | 35 | 35 | 2025-12-06 20:56:05
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ TABLA: menu_categorias
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+--- ESTRUCTURA (SCHEMA) ---
+  • id: INTEGER NULL PRIMARY KEY
+  • nombre: TEXT NOT NULL
+  • descripcion: TEXT NULL
+  • imagen_url: TEXT NULL
+  • imagen_local: TEXT NULL
+  • orden: INTEGER NULL
+  • activo: INTEGER NULL
+  • creado_en: DATETIME NULL
+
+--- INFORMACIÓN GENERAL ---
+Total de registros: 9
+
+--- PRIMEROS REGISTROS (máximo 10) ---
+
+id | nombre | descripcion | imagen_url | imagen_local | orden | activo | creado_en
+------------------------------------------------------------------------------------------------------------------------------------------------------
+61 | Entradas | NULL | NULL | NULL | 0 | 1 | 2025-12-05 15:07:01
+62 | Arroces | NULL | NULL | NULL | 0 | 1 | 2025-12-05 15:07:04
+63 | Rollos Naturales | NULL | NULL | NULL | 0 | 1 | 2025-12-05 15:07:06
+64 | Rollos Empanizados | NULL | NULL | NULL | 0 | 1 | 2025-12-05 15:07:07
+65 | Rollos Especiales | NULL | NULL | NULL | 0 | 1 | 2025-12-05 15:07:09
+66 | Rollos Horneados | NULL | NULL | NULL | 0 | 1 | 2025-12-05 15:07:10
+67 | Bebidas | NULL | NULL | NULL | 0 | 1 | 2025-12-05 15:07:10
+68 | Postres | NULL | NULL | NULL | 0 | 1 | 2025-12-05 15:07:11
+69 | Extras | NULL | NULL | NULL | 0 | 1 | 2025-12-05 15:07:11
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ TABLA: menu_items
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+--- ESTRUCTURA (SCHEMA) ---
+  • id: INTEGER NULL PRIMARY KEY
+  • nombre: TEXT NOT NULL
+  • descripcion: TEXT NULL
+  • precio: DECIMAL(10,2) NOT NULL
+  • categoria_id: INTEGER NULL
+  • imagen_url: TEXT NULL
+  • imagen_local: TEXT NULL
+  • disponible: INTEGER NULL
+  • activo: INTEGER NULL
+  • nuevo: INTEGER NULL
+  • vegetariano: INTEGER NULL
+  • picante: INTEGER NULL
+  • favorito: INTEGER NULL
+  • destacado: INTEGER NULL
+  • promomiercoles: INTEGER NULL
+  • creado_en: DATETIME NULL
+  • ultima_sync: DATETIME NULL
+  • actualizado_en: DATETIME NULL
+
+--- INFORMACIÓN GENERAL ---
+Total de registros: 50
+
+--- PRIMEROS REGISTROS (máximo 10) ---
+
+id | nombre | descripcion | precio | categoria_id | imagen_url | imagen_local | disponible | activo | nuevo | vegetariano | picante | favorito | destacado | promomiercoles | creado_en | ultima_sync | actualizado_en
+------------------------------------------------------------------------------------------------------------------------------------------------------
+302 | Chiles Mazuhi | Deliciosos chiles caribe rellenos de salsa tampico y queso philadelfia | 139 | 61 | https://mazuhi.com/images/entradas/chiles.jpg | /menu-images/61_Chiles_Mazuhi.jpg | 1 | 1 | 0 | 0 | 0 | 1 | 0 | 0 | 2025-12-05 15:07:02 | 2025-12-05 15:07:02 | 2025-12-05 15:07:02
+303 | Camarones Mazuhi | Camarones empanizados rellenos de queso Philadelfia, con un topping de cangrejo picante y bañados en salsa de anguila con ajonjolí. | 139 | 61 | https://mazuhi.com/images/entradas/camarones.jpg | /menu-images/61_Camarones_Mazuhi.jpg | 1 | 1 | 0 | 0 | 1 | 1 | 0 | 0 | 2025-12-05 15:07:03 | 2025-12-05 15:07:03 | 2025-12-05 15:07:03
+304 | Crab Balls | Bolitas de arroz crujientes rellenas de tampico y queso Philadelfia. | 139 | 61 | https://mazuhi.com/images/entradas/crabballs.jpg | /menu-images/61_Crab_Balls.jpg | 1 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 2025-12-05 15:07:04 | 2025-12-05 15:07:04 | 2025-12-05 15:07:04
+305 | Kushiagues de Queso | Crujientes brochetas de queso selecto, empanizadas acompañadas de aderezo | 79 | 61 | https://mazuhi.com/images/entradas/kushiagues.jpg | /menu-images/61_Kushiagues_de_Queso.jpg | 1 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 2025-12-05 15:07:04 | 2025-12-05 15:07:04 | 2025-12-05 15:07:04
+306 | Tostada Tunita | Deliciosos cubitos de atún fresco y aguacate con poro frito con un ligero toque de salsa de cilantro y salsa serranito | 89 | 61 | https://mazuhi.com/images/entradas/tunitostada.jpg | /menu-images/61_Tostada_Tunita.jpg | 1 | 1 | 0 | 0 | 1 | 1 | 0 | 0 | 2025-12-05 15:07:04 | 2025-12-05 15:07:04 | 2025-12-05 15:07:04
+307 | Yakimonchis | Arroz frito con verduras y de proteina Camarón, Res y Pollo, coronado con topping de cangrejo spicy, cremoso philadelphia, aguacate, bañado en salsa de anguila. | 169 | 62 | https://mazuhi.com/images/arroces/yakimonchis.png | /menu-images/62_Yakimonchis.jpg | 1 | 1 | 0 | 0 | 1 | 1 | 0 | 0 | 2025-12-05 15:07:05 | 2025-12-05 15:07:05 | 2025-12-05 15:07:05
+308 | Yakimeshi | Exquisito arroz frito con verduras y proteinas a elección. | 109 | 62 | https://mazuhi.com/images/arroces/yakimeshi.jpg | /menu-images/62_Yakimeshi.jpg | 1 | 1 | 0 | 0 | 0 | 0 | 1 | 0 | 2025-12-05 15:07:05 | 2025-12-05 15:07:05 | 2025-12-05 15:07:05
+309 | Yakimeshi Especial | Arroz frito con verduras y proteína de elección, coronado con topping de tampico, aguacate y philadelfia encima (Proteina a elección) | 135 | 62 | https://mazuhi.com/images/arroces/yakimeshiespecial.jpg | /menu-images/62_Yakimeshi_Especial.jpg | 1 | 1 | 0 | 0 | 0 | 0 | 1 | 0 | 2025-12-05 15:07:05 | 2025-12-05 15:07:05 | 2025-12-05 15:07:05
+310 | Yakimeshi Especial Mixto | Arroz frito con verduras y proteína de elección, coronado con topping de tampico, aguacate y philadelfia encima. | 149 | 62 | https://mazuhi.com/images/arroces/yakimeshiespecialmix.jpg | /menu-images/62_Yakimeshi_Especial_Mixto.jpg | 1 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 2025-12-05 15:07:05 | 2025-12-05 15:07:05 | 2025-12-05 15:07:05
+311 | Gohan Especial | Arroz al vapor con tampico, aguacate y philadelphia | 120 | 62 | https://mazuhi.com/images/arroces/gohanespecial.jpg | /menu-images/62_Gohan_Especial.jpg | 1 | 1 | 0 | 0 | 0 | 0 | 1 | 0 | 2025-12-05 15:07:05 | 2025-12-05 15:07:05 | 2025-12-05 15:07:05
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ TABLA: mesas
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+--- ESTRUCTURA (SCHEMA) ---
+  • id: INTEGER NULL PRIMARY KEY
+  • numero: INTEGER NOT NULL
+  • capacidad: INTEGER NOT NULL
+  • ubicacion: TEXT NULL
+  • estado: TEXT NULL
+  • mesero_id: INTEGER NULL
+  • creado_en: DATETIME NULL
+  • cuenta_id: INTEGER NULL
+
+--- INFORMACIÓN GENERAL ---
+Total de registros: 10
+
+--- PRIMEROS REGISTROS (máximo 10) ---
+
+id | numero | capacidad | ubicacion | estado | mesero_id | creado_en | cuenta_id
+------------------------------------------------------------------------------------------------------------------------------------------------------
+1 | 1 | 2 | Zona Entrada | disponible | NULL | 2025-12-03 16:14:39 | NULL
+2 | 2 | 2 | Zona Entrada | ocupada | NULL | 2025-12-03 16:14:39 | NULL
+3 | 3 | 4 | Zona Centro | disponible | NULL | 2025-12-03 16:14:39 | NULL
+4 | 4 | 4 | Zona Centro | disponible | NULL | 2025-12-03 16:14:39 | NULL
+5 | 5 | 6 | Zona Fondo | disponible | NULL | 2025-12-03 16:14:39 | NULL
+6 | 6 | 6 | Zona Fondo | disponible | NULL | 2025-12-03 16:14:39 | NULL
+7 | 7 | 2 | Zona Terraza | disponible | NULL | 2025-12-03 16:14:39 | NULL
+8 | 8 | 4 | Zona Terraza | disponible | NULL | 2025-12-03 16:14:39 | NULL
+9 | 9 | 4 | Zona Terraza | disponible | NULL | 2025-12-03 16:14:39 | NULL
+10 | 10 | 8 | Zona Privada | disponible | NULL | 2025-12-03 16:14:39 | NULL
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ TABLA: meseros
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+--- ESTRUCTURA (SCHEMA) ---
+  • id: INTEGER NULL PRIMARY KEY
+  • usuario_id: INTEGER NOT NULL
+  • numero_mesero: TEXT NULL
+  • activo: INTEGER NULL
+  • creado_en: DATETIME NULL
+
+--- INFORMACIÓN GENERAL ---
+Total de registros: 0
+
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ TABLA: modificaciones_pedidos
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+--- ESTRUCTURA (SCHEMA) ---
+  • id: INTEGER NULL PRIMARY KEY
+  • tipo: TEXT NOT NULL
+  • pedido_id: INTEGER NOT NULL
+  • cuenta_id: INTEGER NOT NULL
+  • solicitado_por: TEXT NOT NULL
+  • detalles: TEXT NULL
+  • cambios: TEXT NULL
+  • estado: TEXT NULL
+  • autorizado_por: TEXT NULL
+  • fecha_solicitud: DATETIME NULL
+  • fecha_autorizacion: DATETIME NULL
+
+--- INFORMACIÓN GENERAL ---
+Total de registros: 10
+
+--- PRIMEROS REGISTROS (máximo 10) ---
+
+id | tipo | pedido_id | cuenta_id | solicitado_por | detalles | cambios | estado | autorizado_por | fecha_solicitud | fecha_autorizacion
+------------------------------------------------------------------------------------------------------------------------------------------------------
+1 | eliminacion | 3 | 1 | Angel | Solicitud de eliminación del pedido Pedido 003 |  | rechazado | Caja | 2025-12-04 16:19:20 | 2025-12-04 16:35:29
+2 | eliminacion | 8 | 3 | Angel | Solicitud de eliminación del pedido Pedido 008 |  | rechazado | Caja | 2025-12-04 17:10:42 | 2025-12-04 17:17:37
+3 | eliminacion | 10 | 4 | Angel | Solicitud de eliminación del pedido Pedido 010 |  | rechazado | Caja | 2025-12-04 17:57:46 | 2025-12-04 18:05:28
+5 | edicion_completa | 1 | 1 | mesero | Test | {"test": true} | rechazada | Caja | 2025-12-04 18:46:26 | 2025-12-04 19:11:30
+6 | edicion_completa | 12 | 5 | mesero | Edición del pedido Pedido 011 | {"items_eliminados":[],"items_modificados":[{"nombre":"Gohan Especial Mixto","anterior":{"id":19,"pedido_id":12,"menu_item_id":117,"producto_nombre":"Gohan Especial Mixto","cantidad":1,"especificaciones":"con triple hijuputa carne porfas","notas":null,"precio_unitario":149,"subtotal":149,"creado_en":"2025-12-04 18:42:26","nombre":"Gohan Especial Mixto"},"nuevo":{"id":19,"pedido_id":12,"menu_item_id":117,"producto_nombre":"Gohan Especial Mixto","cantidad":1,"especificaciones":"mrengues sin lata si o que mistyer","notas":null,"precio_unitario":149,"subtotal":149,"creado_en":"2025-12-04 18:42:26","nombre":"Gohan Especial Mixto"}}],"items_agregados":[],"items_anteriores":[{"id":18,"pedido_id":12,"menu_item_id":116,"producto_nombre":"Gohan Especial Proteina","cantidad":1,"especificaciones":"quiero que lleve doble carne","notas":null,"precio_unitario":139,"subtotal":139,"creado_en":"2025-12-04 18:42:26","nombre":"Gohan Especial Proteina"},{"id":19,"pedido_id":12,"menu_item_id":117,"producto_nombre":"Gohan Especial Mixto","cantidad":1,"especificaciones":"con triple hijuputa carne porfas","notas":null,"precio_unitario":149,"subtotal":149,"creado_en":"2025-12-04 18:42:26","nombre":"Gohan Especial Mixto"}],"items_nuevos":[{"id":18,"pedido_id":12,"menu_item_id":116,"producto_nombre":"Gohan Especial Proteina","cantidad":1,"especificaciones":"quiero que lleve doble carne","notas":null,"precio_unitario":139,"subtotal":139,"creado_en":"2025-12-04 18:42:26","nombre":"Gohan Especial Proteina"},{"id":19,"pedido_id":12,"menu_item_id":117,"producto_nombre":"Gohan Especial Mixto","cantidad":1,"especificaciones":"mrengues sin lata si o que mistyer","notas":null,"precio_unitario":149,"subtotal":149,"creado_en":"2025-12-04 18:42:26","nombre":"Gohan Especial Mixto"}]} | rechazada | Caja | 2025-12-04 18:47:36 | 2025-12-04 19:11:38
+7 | edicion_completa | 12 | 5 | mesero | Edición del pedido Pedido 011 | {"items_eliminados":[],"items_modificados":[{"nombre":"Gohan Especial Mixto","anterior":{"id":19,"pedido_id":12,"menu_item_id":117,"producto_nombre":"Gohan Especial Mixto","cantidad":1,"especificaciones":"con triple hijuputa carne porfas","notas":null,"precio_unitario":149,"subtotal":149,"creado_en":"2025-12-04 18:42:26","nombre":"Gohan Especial Mixto"},"nuevo":{"id":19,"pedido_id":12,"menu_item_id":117,"producto_nombre":"Gohan Especial Mixto","cantidad":1,"especificaciones":"mrengues sin lata si o que mistyer","notas":null,"precio_unitario":149,"subtotal":149,"creado_en":"2025-12-04 18:42:26","nombre":"Gohan Especial Mixto"}}],"items_agregados":[],"items_anteriores":[{"id":18,"pedido_id":12,"menu_item_id":116,"producto_nombre":"Gohan Especial Proteina","cantidad":1,"especificaciones":"quiero que lleve doble carne","notas":null,"precio_unitario":139,"subtotal":139,"creado_en":"2025-12-04 18:42:26","nombre":"Gohan Especial Proteina"},{"id":19,"pedido_id":12,"menu_item_id":117,"producto_nombre":"Gohan Especial Mixto","cantidad":1,"especificaciones":"con triple hijuputa carne porfas","notas":null,"precio_unitario":149,"subtotal":149,"creado_en":"2025-12-04 18:42:26","nombre":"Gohan Especial Mixto"}],"items_nuevos":[{"id":18,"pedido_id":12,"menu_item_id":116,"producto_nombre":"Gohan Especial Proteina","cantidad":1,"especificaciones":"quiero que lleve doble carne","notas":null,"precio_unitario":139,"subtotal":139,"creado_en":"2025-12-04 18:42:26","nombre":"Gohan Especial Proteina"},{"id":19,"pedido_id":12,"menu_item_id":117,"producto_nombre":"Gohan Especial Mixto","cantidad":1,"especificaciones":"mrengues sin lata si o que mistyer","notas":null,"precio_unitario":149,"subtotal":149,"creado_en":"2025-12-04 18:42:26","nombre":"Gohan Especial Mixto"}]} | aprobada | Caja | 2025-12-04 18:47:37 | 2025-12-04 18:55:33
+8 | edicion_completa | 12 | 5 | mesero | Edición del pedido Pedido 011 | {"items_eliminados":[],"items_modificados":[{"nombre":"Gohan Especial Mixto","anterior":{"id":19,"pedido_id":12,"menu_item_id":117,"producto_nombre":"Gohan Especial Mixto","cantidad":1,"especificaciones":"con triple hijuputa carne porfas","notas":null,"precio_unitario":149,"subtotal":149,"creado_en":"2025-12-04 18:42:26","nombre":"Gohan Especial Mixto"},"nuevo":{"id":19,"pedido_id":12,"menu_item_id":117,"producto_nombre":"Gohan Especial Mixto","cantidad":1,"especificaciones":"dobel merengues de carne","notas":null,"precio_unitario":149,"subtotal":149,"creado_en":"2025-12-04 18:42:26","nombre":"Gohan Especial Mixto"}}],"items_agregados":[],"items_anteriores":[{"id":18,"pedido_id":12,"menu_item_id":116,"producto_nombre":"Gohan Especial Proteina","cantidad":1,"especificaciones":"quiero que lleve doble carne","notas":null,"precio_unitario":139,"subtotal":139,"creado_en":"2025-12-04 18:42:26","nombre":"Gohan Especial Proteina"},{"id":19,"pedido_id":12,"menu_item_id":117,"producto_nombre":"Gohan Especial Mixto","cantidad":1,"especificaciones":"con triple hijuputa carne porfas","notas":null,"precio_unitario":149,"subtotal":149,"creado_en":"2025-12-04 18:42:26","nombre":"Gohan Especial Mixto"}],"items_nuevos":[{"id":18,"pedido_id":12,"menu_item_id":116,"producto_nombre":"Gohan Especial Proteina","cantidad":1,"especificaciones":"quiero que lleve doble carne","notas":null,"precio_unitario":139,"subtotal":139,"creado_en":"2025-12-04 18:42:26","nombre":"Gohan Especial Proteina"},{"id":19,"pedido_id":12,"menu_item_id":117,"producto_nombre":"Gohan Especial Mixto","cantidad":1,"especificaciones":"dobel merengues de carne","notas":null,"precio_unitario":149,"subtotal":149,"creado_en":"2025-12-04 18:42:26","nombre":"Gohan Especial Mixto"}]} | aprobada | Caja | 2025-12-04 18:47:55 | 2025-12-04 18:55:03
+9 | edicion_completa | 12 | 5 | mesero | Edición del pedido Pedido 011 | {"items_eliminados":[{"id":25,"pedido_id":12,"menu_item_id":117,"producto_nombre":"Gohan Especial Mixto","cantidad":1,"especificaciones":"dobel merengues de carne","notas":null,"precio_unitario":149,"subtotal":149,"creado_en":"2025-12-04 18:47:55","nombre":"Gohan Especial Mixto"}],"items_modificados":[],"items_agregados":[],"items_anteriores":[{"id":24,"pedido_id":12,"menu_item_id":116,"producto_nombre":"Gohan Especial Proteina","cantidad":1,"especificaciones":"quiero que lleve doble carne","notas":null,"precio_unitario":139,"subtotal":139,"creado_en":"2025-12-04 18:47:55","nombre":"Gohan Especial Proteina"},{"id":25,"pedido_id":12,"menu_item_id":117,"producto_nombre":"Gohan Especial Mixto","cantidad":1,"especificaciones":"dobel merengues de carne","notas":null,"precio_unitario":149,"subtotal":149,"creado_en":"2025-12-04 18:47:55","nombre":"Gohan Especial Mixto"}],"items_nuevos":[{"id":24,"pedido_id":12,"menu_item_id":116,"producto_nombre":"Gohan Especial Proteina","cantidad":1,"especificaciones":"quiero que lleve doble carne","notas":null,"precio_unitario":139,"subtotal":139,"creado_en":"2025-12-04 18:47:55","nombre":"Gohan Especial Proteina"}]} | aprobada | Caja | 2025-12-04 19:12:00 | 2025-12-04 19:12:57
+10 | edicion_completa | 12 | 5 | mesero | Edición del pedido Pedido 011 | {"items_eliminados":[{"id":25,"pedido_id":12,"menu_item_id":117,"producto_nombre":"Gohan Especial Mixto","cantidad":1,"especificaciones":"dobel merengues de carne","notas":null,"precio_unitario":149,"subtotal":149,"creado_en":"2025-12-04 18:47:55","nombre":"Gohan Especial Mixto"}],"items_modificados":[],"items_agregados":[],"items_anteriores":[{"id":24,"pedido_id":12,"menu_item_id":116,"producto_nombre":"Gohan Especial Proteina","cantidad":1,"especificaciones":"quiero que lleve doble carne","notas":null,"precio_unitario":139,"subtotal":139,"creado_en":"2025-12-04 18:47:55","nombre":"Gohan Especial Proteina"},{"id":25,"pedido_id":12,"menu_item_id":117,"producto_nombre":"Gohan Especial Mixto","cantidad":1,"especificaciones":"dobel merengues de carne","notas":null,"precio_unitario":149,"subtotal":149,"creado_en":"2025-12-04 18:47:55","nombre":"Gohan Especial Mixto"}],"items_nuevos":[{"id":24,"pedido_id":12,"menu_item_id":116,"producto_nombre":"Gohan Especial Proteina","cantidad":1,"especificaciones":"quiero que lleve doble carne","notas":null,"precio_unitario":139,"subtotal":139,"creado_en":"2025-12-04 18:47:55","nombre":"Gohan Especial Proteina"}]} | aprobada | Caja | 2025-12-04 19:12:01 | 2025-12-04 19:13:01
+11 | edicion_completa | 12 | 5 | mesero | Edición del pedido Pedido 011 | {"items_eliminados":[],"items_modificados":[{"nombre":"Gohan Especial Proteina","anterior":{"id":27,"pedido_id":12,"menu_item_id":116,"producto_nombre":"Gohan Especial Proteina","cantidad":1,"especificaciones":"quiero que lleve doble carne","notas":null,"precio_unitario":139,"subtotal":139,"creado_en":"2025-12-04 19:12:01","nombre":"Gohan Especial Proteina"},"nuevo":{"id":27,"pedido_id":12,"menu_item_id":116,"producto_nombre":"Gohan Especial Proteina","cantidad":1,"especificaciones":"super extra duper","notas":null,"precio_unitario":139,"subtotal":139,"creado_en":"2025-12-04 19:12:01","nombre":"Gohan Especial Proteina"}}],"items_agregados":[],"items_anteriores":[{"id":27,"pedido_id":12,"menu_item_id":116,"producto_nombre":"Gohan Especial Proteina","cantidad":1,"especificaciones":"quiero que lleve doble carne","notas":null,"precio_unitario":139,"subtotal":139,"creado_en":"2025-12-04 19:12:01","nombre":"Gohan Especial Proteina"}],"items_nuevos":[{"id":27,"pedido_id":12,"menu_item_id":116,"producto_nombre":"Gohan Especial Proteina","cantidad":1,"especificaciones":"super extra duper","notas":null,"precio_unitario":139,"subtotal":139,"creado_en":"2025-12-04 19:12:01","nombre":"Gohan Especial Proteina"}]} | rechazada | Caja | 2025-12-04 19:12:37 | 2025-12-04 19:13:06
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ TABLA: monitoring_alertas
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+--- ESTRUCTURA (SCHEMA) ---
+  • id: INTEGER NULL PRIMARY KEY
+  • timestamp: DATETIME NULL
+  • tipo_alerta: TEXT NOT NULL
+  • severidad: TEXT NOT NULL
+  • titulo: TEXT NOT NULL
+  • descripcion: TEXT NULL
+  • metricas_asociadas: TEXT NULL
+  • umbral_activacion: TEXT NULL
+  • valor_actual: REAL NULL
+  • estado: TEXT NULL
+  • usuario_id_creador: INTEGER NULL
+  • usuario_id_resolucion: INTEGER NULL
+  • fecha_resolucion: DATETIME NULL
+  • notas_resolucion: TEXT NULL
+
+--- INFORMACIÓN GENERAL ---
+Total de registros: 32
+
+--- PRIMEROS REGISTROS (máximo 10) ---
+
+id | timestamp | tipo_alerta | severidad | titulo | descripcion | metricas_asociadas | umbral_activacion | valor_actual | estado | usuario_id_creador | usuario_id_resolucion | fecha_resolucion | notas_resolucion
+------------------------------------------------------------------------------------------------------------------------------------------------------
+1 | 2025-12-06 05:29:14 | memoria_critica | critica | Memoria del servidor crítica | Uso de memoria: 92.77% | NULL | NULL | 92.77454471186616 | activa | NULL | NULL | NULL | NULL
+2 | 2025-12-06 05:30:14 | memoria_critica | critica | Memoria del servidor crítica | Uso de memoria: 99.77% | NULL | NULL | 99.77238669163441 | activa | NULL | NULL | NULL | NULL
+3 | 2025-12-06 05:31:14 | memoria_critica | critica | Memoria del servidor crítica | Uso de memoria: 99.94% | NULL | NULL | 99.94355189952533 | activa | NULL | NULL | NULL | NULL
+4 | 2025-12-06 05:32:14 | memoria_critica | critica | Memoria del servidor crítica | Uso de memoria: 99.82% | NULL | NULL | 99.82076374722865 | activa | NULL | NULL | NULL | NULL
+5 | 2025-12-06 05:55:59 | memoria_alta | media | Memoria del servidor alta | Uso de memoria: 83.25% | NULL | NULL | 83.24544588831938 | activa | NULL | NULL | NULL | NULL
+6 | 2025-12-06 05:59:59 | memoria_alta | media | Memoria del servidor alta | Uso de memoria: 89.93% | NULL | NULL | 89.92959981889362 | activa | NULL | NULL | NULL | NULL
+7 | 2025-12-06 06:10:03 | memoria_critica | critica | Memoria del servidor crítica | Uso de memoria: 92.08% | NULL | NULL | 92.07758045822865 | activa | NULL | NULL | NULL | NULL
+8 | 2025-12-06 06:13:04 | memoria_critica | critica | Memoria del servidor crítica | Uso de memoria: 98.94% | NULL | NULL | 98.93683669175745 | activa | NULL | NULL | NULL | NULL
+9 | 2025-12-06 06:26:04 | memoria_alta | media | Memoria del servidor alta | Uso de memoria: 78.84% | NULL | NULL | 78.84003336688068 | activa | NULL | NULL | NULL | NULL
+10 | 2025-12-06 06:28:04 | memoria_alta | media | Memoria del servidor alta | Uso de memoria: 89.51% | NULL | NULL | 89.51098818625412 | activa | NULL | NULL | NULL | NULL
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ TABLA: monitoring_errores
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+--- ESTRUCTURA (SCHEMA) ---
+  • id: INTEGER NULL PRIMARY KEY
+  • timestamp: DATETIME NULL
+  • tipo_error: TEXT NOT NULL
+  • mensaje: TEXT NOT NULL
+  • stack_trace: TEXT NULL
+  • archivo: TEXT NULL
+  • linea: INTEGER NULL
+  • endpoint: TEXT NULL
+  • usuario_id: INTEGER NULL
+  • metodo_http: TEXT NULL
+  • url: TEXT NULL
+  • datos_request: TEXT NULL
+  • resolved: BOOLEAN NULL
+  • fecha_resolucion: DATETIME NULL
+
+--- INFORMACIÓN GENERAL ---
+Total de registros: 3
+
+--- PRIMEROS REGISTROS (máximo 10) ---
+
+id | timestamp | tipo_error | mensaje | stack_trace | archivo | linea | endpoint | usuario_id | metodo_http | url | datos_request | resolved | fecha_resolucion
+------------------------------------------------------------------------------------------------------------------------------------------------------
+1 | 2025-12-06 06:01:25 | SqliteError | FOREIGN KEY constraint failed | SqliteError: FOREIGN KEY constraint failed
+    at MonitoringService.registrarLog (/var/www/pos/.next/server/chunks/12.js:6:10)
+    at POST (/var/www/pos/.next/server/app/api/pedidos/route.js:17:517)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /var/www/pos/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:14:39523 | NULL | NULL | /api/pedidos | NULL | NULL | NULL | NULL | 0 | NULL
+2 | 2025-12-06 06:01:50 | SqliteError | FOREIGN KEY constraint failed | SqliteError: FOREIGN KEY constraint failed
+    at MonitoringService.registrarLog (/var/www/pos/.next/server/chunks/12.js:6:10)
+    at POST (/var/www/pos/.next/server/app/api/pedidos/route.js:17:517)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /var/www/pos/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:14:39523 | NULL | NULL | /api/pedidos | NULL | NULL | NULL | NULL | 0 | NULL
+3 | 2025-12-06 06:02:47 | SqliteError | FOREIGN KEY constraint failed | SqliteError: FOREIGN KEY constraint failed
+    at MonitoringService.registrarLog (/var/www/pos/.next/server/chunks/12.js:6:10)
+    at POST (/var/www/pos/.next/server/app/api/pedidos/route.js:17:517)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async /var/www/pos/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:14:39523 | NULL | NULL | /api/pedidos | NULL | NULL | NULL | NULL | 0 | NULL
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ TABLA: monitoring_logs
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+--- ESTRUCTURA (SCHEMA) ---
+  • id: INTEGER NULL PRIMARY KEY
+  • timestamp: DATETIME NULL
+  • nivel: TEXT NOT NULL
+  • tipo: TEXT NOT NULL
+  • modulo: TEXT NOT NULL
+  • endpoint: TEXT NULL
+  • usuario_id: INTEGER NULL
+  • metodo_http: TEXT NULL
+  • codigo_status: INTEGER NULL
+  • mensaje: TEXT NOT NULL
+  • detalles: TEXT NULL
+  • duracion_ms: INTEGER NULL
+  • ip_cliente: TEXT NULL
+  • user_agent: TEXT NULL
+
+--- INFORMACIÓN GENERAL ---
+Total de registros: 31422
+
+--- PRIMEROS REGISTROS (máximo 10) ---
+
+id | timestamp | nivel | tipo | modulo | endpoint | usuario_id | metodo_http | codigo_status | mensaje | detalles | duracion_ms | ip_cliente | user_agent
+------------------------------------------------------------------------------------------------------------------------------------------------------
+1 | 2025-12-06 06:01:25 | info | api_call | pedidos | /api/pedidos | 1 | POST | NULL | Creando nuevo pedido para mesa 1 | {"mesa_numero":"1","es_para_llevar":false,"items_count":1} | NULL | ::ffff:127.0.0.1 | NULL
+2 | 2025-12-06 06:01:25 | info | transaction | pedidos | /api/pedidos | 1 | NULL | NULL | Cuenta creada/obtenida: 41 | {"cuenta_id":41,"mesa_numero":"1"} | NULL | ::ffff:127.0.0.1 | NULL
+3 | 2025-12-06 06:01:25 | info | transaction | pedidos | /api/pedidos | 1 | POST | NULL | Pedido creado exitosamente: Pedido 028 | {"pedido_id":73,"numero_pedido":"Pedido 028","items_count":1,"total":300} | 32 | ::ffff:127.0.0.1 | NULL
+4 | 2025-12-06 06:01:25 | info | api_call | pedidos | /api/pedidos | 1 | POST | NULL | Creando nuevo pedido para mesa undefined | {"items_count":1} | NULL | ::ffff:127.0.0.1 | NULL
+5 | 2025-12-06 06:01:25 | warning | api_call | pedidos | /api/pedidos | 1 | POST | NULL | Datos incompletos en solicitud | NULL | 6 | ::ffff:127.0.0.1 | NULL
+6 | 2025-12-06 06:01:25 | error | error | pedidos | /api/pedidos | NULL | POST | NULL | Error creando pedido: FOREIGN KEY constraint failed | NULL | 5 | ::ffff:127.0.0.1 | NULL
+7 | 2025-12-06 06:01:25 | info | api_call | pedidos | /api/pedidos | NULL | GET | NULL | Obteniendo lista de pedidos | NULL | NULL | ::ffff:127.0.0.1 | NULL
+8 | 2025-12-06 06:01:25 | info | api_call | pedidos | /api/pedidos | NULL | GET | NULL | Pedidos obtenidos: 27 | {"count":27} | 4 | ::ffff:127.0.0.1 | NULL
+9 | 2025-12-06 06:01:25 | info | api_call | pedidos | /api/pedidos | 1 | POST | NULL | Creando nuevo pedido para mesa PL-1765000885 | {"mesa_numero":"PL-1765000885","es_para_llevar":true,"items_count":1} | NULL | ::ffff:127.0.0.1 | NULL
+10 | 2025-12-06 06:01:25 | info | transaction | pedidos | /api/pedidos | 1 | NULL | NULL | Cuenta creada/obtenida: 42 | {"cuenta_id":42,"mesa_numero":"PL-1765000885"} | NULL | ::ffff:127.0.0.1 | NULL
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ TABLA: monitoring_metricas
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+--- ESTRUCTURA (SCHEMA) ---
+  • id: INTEGER NULL PRIMARY KEY
+  • timestamp: DATETIME NULL
+  • tipo_metrica: TEXT NOT NULL
+  • nombre: TEXT NOT NULL
+  • valor: REAL NOT NULL
+  • unidad: TEXT NULL
+  • endpoint: TEXT NULL
+  • usuario_id: INTEGER NULL
+  • tags: TEXT NULL
+
+--- INFORMACIÓN GENERAL ---
+Total de registros: 20
+
+--- PRIMEROS REGISTROS (máximo 10) ---
+
+id | timestamp | tipo_metrica | nombre | valor | unidad | endpoint | usuario_id | tags
+------------------------------------------------------------------------------------------------------------------------------------------------------
+1 | 2025-12-06 06:01:25 | pedidos_creados | Pedidos por hora | 1.0 | NULL | /api/pedidos | 1 | NULL
+2 | 2025-12-06 06:01:25 | pedidos_creados | Pedidos por hora | 1.0 | NULL | /api/pedidos | 1 | NULL
+3 | 2025-12-06 06:01:34 | pedidos_creados | Pedidos por hora | 1.0 | NULL | /api/pedidos | 1 | NULL
+4 | 2025-12-06 06:01:45 | pedidos_creados | Pedidos por hora | 1.0 | NULL | /api/pedidos | 1 | NULL
+5 | 2025-12-06 06:01:46 | pedidos_creados | Pedidos por hora | 1.0 | NULL | /api/pedidos | 1 | NULL
+6 | 2025-12-06 06:01:47 | pedidos_creados | Pedidos por hora | 1.0 | NULL | /api/pedidos | 1 | NULL
+7 | 2025-12-06 06:01:48 | pedidos_creados | Pedidos por hora | 1.0 | NULL | /api/pedidos | 1 | NULL
+8 | 2025-12-06 06:01:49 | pedidos_creados | Pedidos por hora | 1.0 | NULL | /api/pedidos | 1 | NULL
+9 | 2025-12-06 06:02:45 | pedidos_creados | Pedidos por hora | 1.0 | NULL | /api/pedidos | 1 | NULL
+10 | 2025-12-06 06:02:46 | pedidos_creados | Pedidos por hora | 1.0 | NULL | /api/pedidos | 1 | NULL
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ TABLA: monitoring_salud_servidor
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+--- ESTRUCTURA (SCHEMA) ---
+  • id: INTEGER NULL PRIMARY KEY
+  • timestamp: DATETIME NULL
+  • cpu_uso: REAL NULL
+  • memoria_uso: REAL NULL
+  • memoria_disponible_mb: INTEGER NULL
+  • disco_uso: REAL NULL
+  • uptime_segundos: INTEGER NULL
+  • conexiones_bd: INTEGER NULL
+  • procesos_activos: INTEGER NULL
+  • temperatura_cpu: REAL NULL
+  • estado_general: TEXT NULL
+
+--- INFORMACIÓN GENERAL ---
+Total de registros: 1030
+
+--- PRIMEROS REGISTROS (máximo 10) ---
+
+id | timestamp | cpu_uso | memoria_uso | memoria_disponible_mb | disco_uso | uptime_segundos | conexiones_bd | procesos_activos | temperatura_cpu | estado_general
+------------------------------------------------------------------------------------------------------------------------------------------------------
+1 | 2025-12-06 05:08:14 | 6.0 | 63.18171416197701 | 2922 | NULL | 213371 | NULL | NULL | NULL | sano
+2 | 2025-12-06 05:09:14 | 6.0 | 62.22086611170031 | 2999 | NULL | 213431 | NULL | NULL | NULL | sano
+3 | 2025-12-06 05:10:14 | 6.0 | 62.233858525410255 | 2998 | NULL | 213491 | NULL | NULL | NULL | sano
+4 | 2025-12-06 05:11:14 | 6.0 | 62.26835732090523 | 2995 | NULL | 213551 | NULL | NULL | NULL | sano
+5 | 2025-12-06 05:12:14 | 6.0 | 62.28828886466482 | 2993 | NULL | 213611 | NULL | NULL | NULL | sano
+6 | 2025-12-06 05:13:14 | 6.0 | 62.29311180611775 | 2993 | NULL | 213671 | NULL | NULL | NULL | sano
+7 | 2025-12-06 05:14:14 | 6.0 | 62.26830810721694 | 2995 | NULL | 213731 | NULL | NULL | NULL | sano
+8 | 2025-12-06 05:15:14 | 6.0 | 63.5537696454892 | 2893 | NULL | 213791 | NULL | NULL | NULL | sano
+9 | 2025-12-06 05:16:14 | 6.0 | 62.48927756766267 | 2977 | NULL | 213851 | NULL | NULL | NULL | sano
+10 | 2025-12-06 05:17:14 | 6.0 | 62.56501743394908 | 2971 | NULL | 213911 | NULL | NULL | NULL | sano
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ TABLA: monitoring_snapshots
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+--- ESTRUCTURA (SCHEMA) ---
+  • id: INTEGER NULL PRIMARY KEY
+  • timestamp: DATETIME NULL
+  • total_pedidos_hoy: INTEGER NULL
+  • total_ventas_hoy: DECIMAL(10,2) NULL
+  • promedio_tiempo_pedido_ms: INTEGER NULL
+  • pedidos_pendientes: INTEGER NULL
+  • errores_ultimas_24h: INTEGER NULL
+  • disponibilidad_servidor: REAL NULL
+  • transacciones_exitosas: INTEGER NULL
+  • transacciones_fallidas: INTEGER NULL
+  • datos_json: TEXT NULL
+
+--- INFORMACIÓN GENERAL ---
+Total de registros: 0
+
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ TABLA: monitoring_transacciones
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+--- ESTRUCTURA (SCHEMA) ---
+  • id: INTEGER NULL PRIMARY KEY
+  • timestamp: DATETIME NULL
+  • tipo_transaccion: TEXT NOT NULL
+  • pedido_id: INTEGER NULL
+  • cuenta_id: INTEGER NULL
+  • usuario_id: INTEGER NULL
+  • monto: DECIMAL(10,2) NULL
+  • metodo_pago: TEXT NULL
+  • estado: TEXT NULL
+  • duracion_ms: INTEGER NULL
+
+--- INFORMACIÓN GENERAL ---
+Total de registros: 0
+
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ TABLA: pedidos
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+--- ESTRUCTURA (SCHEMA) ---
+  • id: INTEGER NULL PRIMARY KEY
+  • numero_pedido: TEXT NOT NULL
+  • usuario_id: INTEGER NULL
+  • mesero_id: INTEGER NULL
+  • mesa_numero: TEXT NULL
+  • comensales: INTEGER NULL
+  • es_para_llevar: INTEGER NULL
+  • cuenta_id: INTEGER NULL
+  • estado: TEXT NULL
+  • total: DECIMAL(10,2) NULL
+  • observaciones: TEXT NULL
+  • creado_en: DATETIME NULL
+  • actualizado_en: DATETIME NULL
+
+--- INFORMACIÓN GENERAL ---
+Total de registros: 8
+
+--- PRIMEROS REGISTROS (máximo 10) ---
+
+id | numero_pedido | usuario_id | mesero_id | mesa_numero | comensales | es_para_llevar | cuenta_id | estado | total | observaciones | creado_en | actualizado_en
+------------------------------------------------------------------------------------------------------------------------------------------------------
+50 | Pedido 005 | 4 | 4 | PL-1764974759671 | 1 | 1 | 28 | entregado | 270 | NULL | 2025-12-05 22:46:00 | 2025-12-05 23:01:26
+51 | Pedido 006 | 4 | 4 | PL-1764975792989 | 1 | 1 | 29 | entregado | 647 | NULL | 2025-12-05 23:03:13 | 2025-12-05 23:17:20
+87 | Pedido 007 | 4 | 4 | 2 | 1 | 0 | 55 | entregado | 564 | NULL | 2025-12-06 20:56:05 | 2025-12-06 21:13:24
+88 | Pedido 008 | 4 | 4 | 3 | 1 | 0 | 56 | entregado | 270 | NULL | 2025-12-06 21:00:01 | 2025-12-06 21:21:07
+89 | Pedido 009 | 4 | 4 | 3 | 1 | 0 | 56 | entregado | 498 | NULL | 2025-12-06 21:02:07 | 2025-12-06 21:21:22
+90 | Pedido 010 | 4 | 4 | 2 | 1 | 0 | 55 | entregado | 30 | NULL | 2025-12-06 21:03:43 | 2025-12-06 21:13:31
+91 | Pedido 011 | 4 | 4 | PL-1765056875499 | 1 | 1 | 57 | entregado | 238 | NULL | 2025-12-06 21:34:36 | 2025-12-06 21:43:18
+92 | Pedido 012 | 4 | 4 | 2 | 1 | 0 | 64 | pendiente | 468 | NULL | 2025-12-06 23:12:14 | 2025-12-06 23:12:14
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ TABLA: productos
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+--- ESTRUCTURA (SCHEMA) ---
+  • id: INTEGER NULL PRIMARY KEY
+  • nombre: TEXT NOT NULL
+  • descripcion: TEXT NULL
+  • precio: DECIMAL(10,2) NOT NULL
+  • costo: DECIMAL(10,2) NULL
+  • cantidad_stock: INTEGER NULL
+  • activo: INTEGER NULL
+  • creado_en: DATETIME NULL
+
+--- INFORMACIÓN GENERAL ---
+Total de registros: 0
+
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ TABLA: stock
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+--- ESTRUCTURA (SCHEMA) ---
+  • id: INTEGER NULL PRIMARY KEY
+  • menu_item_id: INTEGER NOT NULL
+  • cantidad_disponible: INTEGER NULL
+  • cantidad_minima: INTEGER NULL
+  • ultima_actualizacion: DATETIME NULL
+
+--- INFORMACIÓN GENERAL ---
+Total de registros: 0
+
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ TABLA: usuarios
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+--- ESTRUCTURA (SCHEMA) ---
+  • id: INTEGER NULL PRIMARY KEY
+  • username: TEXT NOT NULL
+  • password: TEXT NOT NULL
+  • nombre: TEXT NULL
+  • rol: TEXT NULL
+  • activo: INTEGER NULL
+  • creado_en: DATETIME NULL
+
+--- INFORMACIÓN GENERAL ---
+Total de registros: 8
+
+--- PRIMEROS REGISTROS (máximo 10) ---
+
+id | username | password | nombre | rol | activo | creado_en
+------------------------------------------------------------------------------------------------------------------------------------------------------
+1 | admin | $2a$10$noL5PkkTGsW3kbl9DYirBOfQB1CbvP2OXjsPqKRTxZ47DwKc7rWf6 | Administrador | admin | 1 | 2025-12-03 15:03:27
+2 | mesero | $2a$10$hopIfA7HjjdW4/t7kQ1NO.vq7fWSeCyUze5qRPZL1BDCNj5gb8l3i | Mesero | admin | 1 | 2025-12-03 15:03:27
+3 | angel | $2a$10$5jlxlTPpQh6NqgyljSdUFOtxarX.LpQHlGQaPJ1imaNbQ0tcKACuO | angel | admin | 1 | 2025-12-03 15:23:34
+4 | angel_mesero | $2a$10$h1DJik/Ou1PQ3lAO4PKSle40t9Pvl.5LRI3Xi2mF4klZYJ47FO.xC | Angel | mesero | 1 | 2025-12-04 02:45:42
+5 | jhayco | $2a$10$otOxzDZLdz3jHuCgQNF2S.aI2QWbFzuCQ6cN7xFOGk5h3.twwIiHa | jhayco | mesero | 1 | 2025-12-04 11:41:29
+6 | olcha | $2a$10$UUCC/kLSSqAPooZD83w12.wEUQ0oTspP3WVsy03gwxd1I2dN/tXTe | olcha | mesero | 1 | 2025-12-05 14:39:48
+7 | flaco | $2a$10$OvDMqTJojp9pGU0QQeAs4.MIwwyHTR//XtCiqLHWMlZKBKgV5iyPa | Flaco | mesero | 1 | 2025-12-05 19:53:19
+8 | said | $2a$10$eldTp6Ovm.RS178TulS2Vu1rJVcUxJnMeKVyL3yJn7uLcyXmzZ5UO | said | mesero | 1 | 2025-12-06 21:19:30
+
+
+================================================================================
+RESUMEN DE TABLAS
+================================================================================
+
+caja: 0 registros
+categorias: 0 registros
+cuentas: 6 registros
+detalle_pedidos: 25 registros
+menu_categorias: 9 registros
+menu_items: 50 registros
+mesas: 10 registros
+meseros: 0 registros
+modificaciones_pedidos: 10 registros
+monitoring_alertas: 32 registros
+monitoring_errores: 3 registros
+monitoring_logs: 31422 registros
+monitoring_metricas: 20 registros
+monitoring_salud_servidor: 1030 registros
+monitoring_snapshots: 0 registros
+monitoring_transacciones: 0 registros
+pedidos: 8 registros
+productos: 0 registros
+stock: 0 registros
+usuarios: 8 registros

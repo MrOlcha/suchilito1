@@ -1,0 +1,142 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+.font-condiment {
+  font-family: var(--font-teko), sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  padding-bottom: 0;
+}
+
+/* Optimizaciones de rendimiento */
+* {
+  box-sizing: border-box;
+}
+
+/* Optimización de imágenes */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Optimización de animaciones */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Padding para navegación inferior en móviles */
+@media (max-width: 768px) {
+  body {
+    padding-bottom: 80px;
+    padding-top: 0; /* Sin padding top ya que header no es fixed en móvil */
+  }
+}
+
+/* Padding top solo para desktop */
+@media (min-width: 769px) {
+  body {
+    padding-top: 64px; /* Para header fixed en desktop */
+  }
+}
+
+/* Animaciones optimizadas */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Optimización de GPU para animaciones */
+.gpu-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary-300 hover:bg-primary-400 text-white font-medium px-6 py-3 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl;
+  }
+  
+  .btn-secondary {
+    @apply bg-white hover:bg-gray-50 text-gray-800 font-medium px-6 py-3 rounded-full border border-gray-200 transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg;
+  }
+  
+  .btn-dark {
+    @apply bg-secondary-600 hover:bg-secondary-700 text-white font-medium px-6 py-3 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl;
+  }
+  
+  .card-hover {
+    @apply transition-all duration-300 transform hover:scale-105 hover:shadow-xl;
+  }
+  
+  .section-padding {
+    @apply py-16 px-4 sm:px-6 lg:px-8;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  /* Botón de Ordenar en Línea con efectos especiales - Tema Azul */
+  .order-online-btn {
+    background: linear-gradient(45deg, #3b82f6, #374058, #1e40af);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .order-online-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(147,197,253,0.5), transparent);
+    transition: left 0.6s;
+  }
+  
+  .order-online-btn:hover::before {
+    left: 100%;
+  }
+  
+  /* Animación de pulso para el botón - Tema Azul */
+  @keyframes pulse-order {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+    50% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+  }
+  
+  .pulse-order {
+    animation: pulse-order 2s infinite;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar { 
+    display: none;  /* Safari and Chrome */
+  }
+}
