@@ -13,7 +13,7 @@
       "static/chunks/vendors-e3337a0dc5fd2065.js",
       "static/chunks/main-app-1fbd95156448049d.js",
       "static/css/ea45a96431c9cf98.css",
-      "static/chunks/app/layout-aea5e29cb1323ae3.js"
+      "static/chunks/app/layout-2bbcf1ff92e1ee29.js"
     ],
     "/cart/page": [
       "static/chunks/webpack-66c781987d7ac880.js",
@@ -77,13 +77,6 @@
       "static/chunks/main-app-1fbd95156448049d.js",
       "static/chunks/app/registro/page-ec10c85a3e69aebc.js"
     ],
-    "/facturacion/page": [
-      "static/chunks/webpack-66c781987d7ac880.js",
-      "static/chunks/next-e239240342613ac9.js",
-      "static/chunks/vendors-e3337a0dc5fd2065.js",
-      "static/chunks/main-app-1fbd95156448049d.js",
-      "static/chunks/app/facturacion/page-7daa69ab2fc4f55a.js"
-    ],
     "/rest/page": [
       "static/chunks/webpack-66c781987d7ac880.js",
       "static/chunks/next-e239240342613ac9.js",
@@ -127,6 +120,13 @@
       "static/chunks/main-app-1fbd95156448049d.js",
       "static/chunks/619-e9864579267731bd.js",
       "static/chunks/app/ubicacion/page-e388411cd6bebfd8.js"
+    ],
+    "/facturacion/page": [
+      "static/chunks/webpack-66c781987d7ac880.js",
+      "static/chunks/next-e239240342613ac9.js",
+      "static/chunks/vendors-e3337a0dc5fd2065.js",
+      "static/chunks/main-app-1fbd95156448049d.js",
+      "static/chunks/app/facturacion/page-7daa69ab2fc4f55a.js"
     ]
   }
 }

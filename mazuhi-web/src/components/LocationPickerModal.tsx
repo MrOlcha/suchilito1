@@ -68,8 +68,8 @@ export default function LocationPickerModal({
 
   // Ubicación de la sucursal
   const SUCURSAL_LOCATION = {
-    lat: 20.6820,
-    lng: -100.3950,
+    lat: 20.641542,
+    lng: -100.480554,
     name: 'Mazuhi Sushi - Valle de Santiago',
     address: 'Valle Puerta del Sol 597, Valle de Santiago, 76116 Santiago de Querétaro, Qro.',
   };
