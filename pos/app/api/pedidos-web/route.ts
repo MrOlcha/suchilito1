@@ -82,14 +82,15 @@ export async function POST(request: NextRequest) {
 
     // Insertar detalles del pedido
     const insertDetalle = db.prepare(`
-      INSERT INTO detalles_pedidos (
+      INSERT INTO detalle_pedidos (
         pedido_id,
-        item_nombre,
+        producto_nombre,
         cantidad,
         precio_unitario,
+        subtotal,
         especificaciones,
         notas
-      ) VALUES (?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
 
     for (const item of orderData.items) {
@@ -103,6 +104,7 @@ export async function POST(request: NextRequest) {
         item.nombre,
         item.cantidad,
         item.precio,
+        item.subtotal,
         especificaciones || null,
         item.comentarios || null
       );
