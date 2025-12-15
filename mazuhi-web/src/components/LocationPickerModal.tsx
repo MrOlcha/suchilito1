@@ -63,6 +63,7 @@ export default function LocationPickerModal({
   const [predictions, setPredictions] = useState<PlacePrediction[]>([]);
   const [showPredictions, setShowPredictions] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Verificar disponibilidad de API de Google Maps
   const checkGoogleMapsAPI = async (attempt = 1, maxAttempts = 50): Promise<boolean> => {
@@ -263,42 +264,61 @@ export default function LocationPickerModal({
   // Handle search input with debouncing
   const handleSearchChange = async (value: string) => {
     setSearchInput(value);
+    LOG.info(`Search input changed: "${value}"`);
     
+    // Clear previous timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
     if (value.length < 2) {
+      LOG.debug('Input too short, clearing predictions');
       setPredictions([]);
       setShowPredictions(false);
       return;
     }
 
+    // Debounce: wait 300ms before making the request
     setSearchLoading(true);
     
-    try {
-      if (!autocompleteServiceRef.current) {
-        LOG.warn('Autocomplete service not ready');
-        return;
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        LOG.debug(`Fetching predictions for "${value}"...`);
+        
+        if (!autocompleteServiceRef.current) {
+          LOG.error('Autocomplete service not ready');
+          setSearchLoading(false);
+          return;
+        }
+
+        const response = await autocompleteServiceRef.current.getPlacePredictions({
+          input: value,
+          componentRestrictions: { country: 'mx' }, // Limitar a México
+        });
+
+        LOG.info(`API returned ${response.predictions.length} predictions`);
+
+        const formattedPredictions = response.predictions.map((p: any) => ({
+          place_id: p.place_id,
+          description: p.description,
+          main_text: p.structured_formatting?.main_text || p.description,
+          secondary_text: p.structured_formatting?.secondary_text || '',
+        }));
+
+        LOG.debug('Formatted predictions:', formattedPredictions);
+        
+        setPredictions(formattedPredictions);
+        setShowPredictions(true);
+        
+        LOG.info(`✅ Showing ${formattedPredictions.length} predictions for "${value}"`);
+      } catch (error) {
+        LOG.error('Error getting predictions:', error);
+        setPredictions([]);
+        setShowPredictions(false);
+      } finally {
+        setSearchLoading(false);
       }
-
-      const response = await autocompleteServiceRef.current.getPlacePredictions({
-        input: value,
-        componentRestrictions: { country: 'mx' }, // Limitar a México
-      });
-
-      const formattedPredictions = response.predictions.map((p: any) => ({
-        place_id: p.place_id,
-        description: p.description,
-        main_text: p.structured_formatting?.main_text || p.description,
-        secondary_text: p.structured_formatting?.secondary_text || '',
-      }));
-
-      setPredictions(formattedPredictions);
-      setShowPredictions(true);
-      LOG.debug(`Found ${formattedPredictions.length} predictions for "${value}"`);
-    } catch (error) {
-      LOG.warn('Error getting predictions:', error);
-      setPredictions([]);
-    } finally {
-      setSearchLoading(false);
-    }
+    }, 300);
   };
 
   // Handle selecting a prediction
@@ -306,6 +326,7 @@ export default function LocationPickerModal({
     LOG.info(`Selected prediction: ${prediction.description}`);
     setSearchInput(prediction.description);
     setShowPredictions(false);
+    setPredictions([]);
 
     try {
       if (!placesServiceRef.current) {
@@ -313,14 +334,18 @@ export default function LocationPickerModal({
         return;
       }
 
+      LOG.info('📍 Fetching place details...');
+
       // Get place details
       const response = await new Promise((resolve, reject) => {
         placesServiceRef.current.getDetails(
-          { placeId: prediction.place_id },
+          { placeId: prediction.place_id, fields: ['geometry', 'formatted_address'] },
           (place: any, status: any) => {
             if (status === window.google.maps.places.PlacesServiceStatus.OK) {
+              LOG.info('✅ Place details retrieved');
               resolve(place);
             } else {
+              LOG.error(`Places service error: ${status}`);
               reject(new Error(`Places service error: ${status}`));
             }
           }
@@ -331,7 +356,7 @@ export default function LocationPickerModal({
       const lat = place.geometry.location.lat();
       const lng = place.geometry.location.lng();
 
-      LOG.info(`Moving map to: ${lat}, ${lng}`);
+      LOG.info(`🎯 Moving map to: ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
 
       // Update map and marker
       if (mapInstanceRef.current) {
@@ -411,7 +436,7 @@ export default function LocationPickerModal({
                 </div>
 
                 {/* Search Input */}
-                <div className="border-b border-gray-200 p-4 bg-gray-50">
+                <div className="border-b border-gray-200 p-4 bg-gray-50 relative z-20">
                   <div className="relative">
                     <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
                       <MagnifyingGlassIcon className="h-5 w-5" />
@@ -422,6 +447,11 @@ export default function LocationPickerModal({
                       placeholder="Busca tu ubicación (ej: Avenida Camarón Sábalo, Mazatlán)..."
                       value={searchInput}
                       onChange={(e) => handleSearchChange(e.target.value)}
+                      onFocus={() => {
+                        if (predictions.length > 0) {
+                          setShowPredictions(true);
+                        }
+                      }}
                       className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                     />
                     {searchLoading && (
@@ -431,21 +461,33 @@ export default function LocationPickerModal({
                     )}
                   </div>
 
-                  {/* Predictions Dropdown */}
+                  {/* Predictions Dropdown - Mejorado */}
                   {showPredictions && predictions.length > 0 && (
-                    <div className="absolute top-full left-4 right-4 mt-2 bg-white border border-gray-300 rounded-lg shadow-lg z-20 max-h-60 overflow-y-auto">
-                      {predictions.map((prediction) => (
-                        <button
-                          key={prediction.place_id}
-                          onClick={() => handleSelectPrediction(prediction)}
-                          className="w-full text-left px-4 py-3 hover:bg-orange-50 border-b border-gray-100 last:border-b-0 transition-colors"
-                        >
-                          <div className="font-medium text-gray-900">{prediction.main_text}</div>
-                          {prediction.secondary_text && (
-                            <div className="text-sm text-gray-600">{prediction.secondary_text}</div>
-                          )}
-                        </button>
-                      ))}
+                    <div className="absolute top-full left-4 right-4 mt-1 bg-white border-2 border-orange-300 rounded-lg shadow-xl z-50 max-h-64 overflow-y-auto">
+                      <div className="p-2">
+                        {predictions.map((prediction, index) => (
+                          <button
+                            key={`${prediction.place_id}-${index}`}
+                            onClick={() => {
+                              LOG.info(`User clicked on prediction: ${prediction.description}`);
+                              handleSelectPrediction(prediction);
+                            }}
+                            className="w-full text-left px-4 py-3 hover:bg-orange-100 rounded-md transition-colors mb-1 last:mb-0"
+                          >
+                            <div className="font-semibold text-gray-900 text-sm">{prediction.main_text}</div>
+                            {prediction.secondary_text && (
+                              <div className="text-xs text-gray-600 mt-0.5">{prediction.secondary_text}</div>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* No results message */}
+                  {showPredictions && predictions.length === 0 && !searchLoading && searchInput.length >= 2 && (
+                    <div className="absolute top-full left-4 right-4 mt-1 bg-white border-2 border-gray-300 rounded-lg shadow-xl z-50 p-4">
+                      <p className="text-center text-gray-500 text-sm">No se encontraron resultados para "{searchInput}"</p>
                     </div>
                   )}
                 </div>
