@@ -31,11 +31,19 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { telefono, correo, fecha_nacimiento, nombre, password } = body;
+    const { telefono, correo, fecha_nacimiento, nombre, pin } = body;
 
-    if (!telefono || !correo || !fecha_nacimiento || !nombre || !password) {
+    if (!telefono || !correo || !fecha_nacimiento || !nombre || !pin) {
       return NextResponse.json(
-        { message: 'Faltan datos requeridos (telefono, correo, fecha_nacimiento, nombre, password)' },
+        { message: 'Faltan datos requeridos (telefono, correo, fecha_nacimiento, nombre, pin)' },
+        { status: 400 }
+      );
+    }
+
+    // Validar que el PIN sea de 4 dígitos
+    if (!/^\d{4}$/.test(pin)) {
+      return NextResponse.json(
+        { message: 'El PIN debe ser de exactamente 4 dígitos' },
         { status: 400 }
       );
     }
@@ -64,8 +72,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Hashear la contraseña
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Almacenar el PIN directamente (sin hash para PINs simples)
+    const pinAlmacenado = pin;
 
     // Insertar nuevo cliente
     const stmt = db.prepare(`
@@ -73,7 +81,7 @@ export async function POST(request: NextRequest) {
       VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     `);
 
-    const result = stmt.run(telefono, correo, fecha_nacimiento, nombre, hashedPassword);
+    const result = stmt.run(telefono, correo, fecha_nacimiento, nombre, pinAlmacenado);
 
     db.close();
 

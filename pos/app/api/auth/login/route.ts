@@ -8,11 +8,11 @@ const dbPath = path.join(process.cwd(), 'pos.db');
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { correo, password } = body;
+    const { correo, pin } = body;
 
-    if (!correo || !password) {
+    if (!correo || !pin) {
       return NextResponse.json(
-        { message: 'Faltan datos requeridos (correo, password)' },
+        { message: 'Faltan datos requeridos (correo, pin)' },
         { status: 400 }
       );
     }
@@ -30,17 +30,15 @@ export async function POST(request: NextRequest) {
 
     if (!cliente) {
       return NextResponse.json(
-        { message: 'Correo o contraseña incorrectos' },
+        { message: 'Correo o PIN incorrectos' },
         { status: 401 }
       );
     }
 
-    // Verificar contraseña
-    const passwordMatch = await bcrypt.compare(password, cliente.password);
-
-    if (!passwordMatch) {
+    // Verificar PIN (comparación directa)
+    if (pin !== cliente.password) {
       return NextResponse.json(
-        { message: 'Correo o contraseña incorrectos' },
+        { message: 'Correo o PIN incorrectos' },
         { status: 401 }
       );
     }

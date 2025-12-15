@@ -56,8 +56,8 @@ export async function POST(request: NextRequest) {
       db.close();
       console.log(`❌ Código incorrecto para ${correo}. Esperado: ${cliente.codigo_verificacion}, Recibido: ${codigo.toUpperCase()}`);
       return NextResponse.json(
-        { message: 'Código incorrecto' },
-        { status: 401 }
+        { message: 'Código de verificación incorrecto. Por favor, revisa tu correo e intenta de nuevo.' },
+        { status: 400 }
       );
     }
 
@@ -69,31 +69,39 @@ export async function POST(request: NextRequest) {
       db.close();
       console.log(`❌ Código expirado para ${correo}`);
       return NextResponse.json(
-        { message: 'El código ha expirado. Solicita uno nuevo.' },
-        { status: 401 }
+        { message: 'El código ha expirado. Por favor, solicita uno nuevo.' },
+        { status: 400 }
       );
     }
 
-    console.log(`✅ Código válido para ${correo}, actualizando contraseña...`);
+    console.log(`✅ Código válido para ${correo}, actualizando PIN...`);
 
-    // Hashear nueva contraseña
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    // Validar que el nuevo PIN sea de 4 dígitos
+    if (!/^\d{4}$/.test(newPassword)) {
+      db.close();
+      return NextResponse.json(
+        { message: 'El PIN debe ser de exactamente 4 dígitos' },
+        { status: 400 }
+      );
+    }
 
-    // Actualizar contraseña y limpiar código
+    // Almacenar nuevo PIN directamente (sin hash)
+
+    // Actualizar PIN y limpiar código
     db.prepare(`
       UPDATE clientes_web 
       SET password = ?, 
           codigo_verificacion = NULL, 
           fecha_verificacion = NULL 
       WHERE correo = ?
-    `).run(hashedPassword, correo);
+    `).run(newPassword, correo);
 
     db.close();
 
     console.log(`✅ Contraseña actualizada para ${correo}`);
 
     return NextResponse.json({
-      message: 'Contraseña actualizada exitosamente',
+      message: 'PIN actualizado exitosamente',
       success: true
     });
 

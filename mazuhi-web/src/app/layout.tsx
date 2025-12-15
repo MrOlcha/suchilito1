@@ -97,16 +97,15 @@ export default function RootLayout({
     <html lang="es" className="scroll-smooth">
       <head>
         {/* Preload recursos críticos */}
-        <link rel="preload" href="/images/gabo.png" as="image" />
         <link rel="dns-prefetch" href="//fonts.googleapis.com" />
         <link rel="dns-prefetch" href="//fonts.gstatic.com" />
         <link rel="preconnect" href="https://i.postimg.cc" crossOrigin="" />
         
-        {/* Google Maps API - Sin callback */}
+        {/* Google Maps API - Cargado de forma optimizada */}
         <script
+          src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places,geometry`}
           async
           defer
-          src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places,geometry`}
         ></script>
       </head>
       <body className={`${inter.className} ${teko.variable} antialiased`}>

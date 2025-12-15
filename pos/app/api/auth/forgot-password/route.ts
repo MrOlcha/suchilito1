@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     const mailResult = await transporter.sendMail({
       from: '"Mazuhi Sushi 🍱" <verificacion@mazuhi.com>',
       to: correo,
-      subject: '🔐 Recuperación de Contraseña - Mazuhi',
+      subject: '🔐 Recuperación de PIN - Mazuhi',
       html: `
         <!DOCTYPE html>
         <html>
@@ -103,11 +103,11 @@ export async function POST(request: NextRequest) {
         <body>
           <div class="container">
             <div class="header">
-              <h1>🔐 Recuperación de Contraseña</h1>
+              <h1>🔐 Recuperación de PIN</h1>
             </div>
             <div class="content">
               <p>Hola <strong>${cliente.nombre}</strong>,</p>
-              <p>Recibimos una solicitud para restablecer tu contraseña. Usa el siguiente código para cambiarla:</p>
+              <p>Recibimos una solicitud para restablecer tu PIN de acceso. Usa el siguiente código para cambiarlo:</p>
               
               <div class="code-box">
                 <div class="code">${resetCode}</div>
