@@ -44,26 +44,30 @@ export default function LocationPickerModal({
 
   const initializeMap = async () => {
     try {
-      // Esperar a que Google Maps esté disponible
-      const maxAttempts = 30;
+      setMapError(null);
+      setLoading(true);
+
+      // Esperar a que Google Maps esté disponible con retry inteligente
+      const maxAttempts = 50; // 50 * 200ms = 10 segundos máximo
       let attempts = 0;
       
       while (!window.google?.maps && attempts < maxAttempts) {
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise(resolve => setTimeout(resolve, 200));
         attempts++;
       }
 
       if (!window.google?.maps) {
-        throw new Error('Google Maps no pudo cargar. Intenta recargar la página.');
+        throw new Error('Google Maps API no pudo cargar. Por favor, verifica tu conexión a internet e intenta de nuevo.');
       }
 
       if (!mapRef.current) {
-        console.error('mapRef.current no disponible');
+        console.error('❌ mapRef.current no disponible');
+        setMapError('Error al inicializar el contenedor del mapa');
         setLoading(false);
         return;
       }
 
-      console.log('🗺️ Inicializando Google Maps...');
+      console.log('✅ Google Maps cargado correctamente en intento:', attempts);
 
       const defaultLocation = { lat: 24.2769, lng: -110.2708 }; // Mazatlán
 
@@ -77,6 +81,7 @@ export default function LocationPickerModal({
         zoomControl: true,
         minZoom: 10,
         maxZoom: 18,
+        mapTypeId: 'roadmap',
       });
 
       mapInstanceRef.current = map;
@@ -102,10 +107,12 @@ export default function LocationPickerModal({
             const address = response.results[0].formatted_address;
             setSelectedLocation({ lat, lng, address });
             console.log('📍 Ubicación actualizada:', address);
+          } else {
+            setSelectedLocation({ lat, lng, address: `${lat.toFixed(4)}, ${lng.toFixed(4)}` });
           }
         } catch (error) {
-          console.error('Error geocoding:', error);
-          setSelectedLocation({ lat, lng, address: `${lat}, ${lng}` });
+          console.error('❌ Error en geocoding:', error);
+          setSelectedLocation({ lat, lng, address: `${lat.toFixed(4)}, ${lng.toFixed(4)}` });
         }
       };
 
@@ -128,9 +135,8 @@ export default function LocationPickerModal({
       // Obtener dirección inicial
       await updateAddress(defaultLocation.lat, defaultLocation.lng);
       setLoading(false);
-      setMapError(null);
     } catch (error) {
-      console.error('Error inicializando mapa:', error);
+      console.error('❌ Error inicializando mapa:', error);
       setMapError(error instanceof Error ? error.message : 'Error al cargar el mapa. Por favor, intenta nuevamente.');
       setLoading(false);
     }

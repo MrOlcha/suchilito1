@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Teko } from 'next/font/google'
+import Script from 'next/script'
 import './globals.css'
 import { CartProvider } from '@/contexts/CartContext'
 import { AuthProvider } from '@/contexts/AuthContext'
@@ -101,12 +102,11 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="//fonts.gstatic.com" />
         <link rel="preconnect" href="https://i.postimg.cc" crossOrigin="" />
         
-        {/* Google Maps API - Cargado de forma optimizada */}
-        <script
+        {/* Google Maps API - Cargado con next/script para mejor rendimiento */}
+        <Script
           src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places,geometry`}
-          async
-          defer
-        ></script>
+          strategy="afterInteractive"
+        />
       </head>
       <body className={`${inter.className} ${teko.variable} antialiased`}>
         <AuthProvider>
