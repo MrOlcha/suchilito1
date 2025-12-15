@@ -63,7 +63,53 @@ export default function LocationPickerModal({
   const [predictions, setPredictions] = useState<PlacePrediction[]>([]);
   const [showPredictions, setShowPredictions] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [coverageStatus, setCoverageStatus] = useState<{ within: boolean; distance: number; message: string } | null>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Ubicación de la sucursal
+  const SUCURSAL_LOCATION = {
+    lat: 20.6134,
+    lng: -100.2917,
+    name: 'Mazuhi Sushi - Valle de Santiago',
+    address: 'Valle Puerta del Sol 597, Valle de Santiago, 76116 Santiago de Querétaro, Qro.',
+  };
+
+  // Radio de cobertura en kilómetros
+  const COVERAGE_RADIUS_KM = 3;
+
+  // Calcular distancia entre dos coordenadas (Haversine formula)
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // Radio de la Tierra en km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c;
+    return distance;
+  };
+
+  // Verificar si la ubicación está dentro del radio de cobertura
+  const isWithinCoverage = (lat: number, lng: number): { within: boolean; distance: number; message: string } => {
+    const distance = calculateDistance(SUCURSAL_LOCATION.lat, SUCURSAL_LOCATION.lng, lat, lng);
+    const within = distance <= COVERAGE_RADIUS_KM;
+
+    if (within) {
+      return {
+        within: true,
+        distance,
+        message: `✅ Ubicación dentro de cobertura (${distance.toFixed(2)} km)`,
+      };
+    } else {
+      return {
+        within: false,
+        distance,
+        message: `❌ Lo sentimos, esta ubicación está fuera de nuestro rango de entrega (${distance.toFixed(2)} km de distancia). Cobertura máxima: ${COVERAGE_RADIUS_KM} km`,
+      };
+    }
+  };
 
   // Verificar disponibilidad de API de Google Maps
   const checkGoogleMapsAPI = async (attempt = 1, maxAttempts = 50): Promise<boolean> => {
@@ -166,13 +212,12 @@ export default function LocationPickerModal({
       
       LOG.info('✅ STEP 3 OK: All required classes available');
 
-      const defaultLocation = { lat: 24.2769, lng: -110.2708 }; // Mazatlán
-      LOG.info('📍 Default location:', defaultLocation);
+      LOG.info('📍 Default location: Sucursal Querétaro');
 
       LOG.info('📍 STEP 4: Creating map instance...');
       const map = new window.google.maps.Map(mapRef.current, {
         zoom: 15,
-        center: defaultLocation,
+        center: SUCURSAL_LOCATION,
         streetViewControl: false,
         fullscreenControl: true,
         mapTypeControl: true,
@@ -186,7 +231,7 @@ export default function LocationPickerModal({
 
       LOG.info('📍 STEP 5: Creating marker...');
       const marker = new window.google.maps.Marker({
-        position: defaultLocation,
+        position: SUCURSAL_LOCATION,
         map: map,
         draggable: true,
         title: 'Tu ubicación',
@@ -207,6 +252,12 @@ export default function LocationPickerModal({
 
       const updateAddress = async (lat: number, lng: number) => {
         LOG.debug(`Updating address for coordinates: (${lat.toFixed(4)}, ${lng.toFixed(4)})`);
+        
+        // Verificar cobertura
+        const coverage = isWithinCoverage(lat, lng);
+        setCoverageStatus(coverage);
+        LOG.info(coverage.message);
+
         try {
           const response = await geocoder.geocode({ location: { lat, lng } });
           if (response.results && response.results[0]) {
@@ -243,11 +294,11 @@ export default function LocationPickerModal({
         updateAddress(lat, lng);
       });
       
-      LOG.info('✅ STEP 7 OK: Event listeners setup complete');
+      LOG.info('📍 STEP 8 OK: Event listeners setup complete');
 
-      LOG.info('📍 STEP 8: Getting initial address...');
-      await updateAddress(defaultLocation.lat, defaultLocation.lng);
-      LOG.info('✅ STEP 8 OK: Initial address retrieved');
+      LOG.info('📍 STEP 9: Getting initial address...');
+      await updateAddress(SUCURSAL_LOCATION.lat, SUCURSAL_LOCATION.lng);
+      LOG.info('✅ STEP 9 OK: Initial address retrieved');
 
       const totalTime = Date.now() - startTime;
       LOG.info(`🎉 MAP INITIALIZATION COMPLETED SUCCESSFULLY in ${totalTime}ms`);
@@ -357,6 +408,11 @@ export default function LocationPickerModal({
       const lng = place.geometry.location.lng();
 
       LOG.info(`🎯 Moving map to: ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+
+      // Verificar cobertura ANTES de actualizar
+      const coverage = isWithinCoverage(lat, lng);
+      setCoverageStatus(coverage);
+      LOG.info(coverage.message);
 
       // Update map and marker
       if (mapInstanceRef.current) {
@@ -528,13 +584,32 @@ export default function LocationPickerModal({
                   <div ref={mapRef} className="w-full h-full rounded-b" />
                 </div>
 
-                {/* Footer - Display selected location */}
-                <div className="border-t border-gray-200 bg-gray-50 px-6 py-3">
+                {/* Footer - Display selected location and coverage status */}
+                <div className="border-t border-gray-200 bg-gray-50 px-6 py-4 space-y-3">
                   {selectedLocation && (
-                    <div className="text-sm text-gray-700 mb-3">
-                      <span className="font-semibold">Ubicación seleccionada:</span> {selectedLocation.address}
+                    <div>
+                      <div className="text-sm text-gray-700 mb-2">
+                        <span className="font-semibold">📍 Ubicación:</span> {selectedLocation.address}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        <span className="font-semibold">📏 Distancia a sucursal:</span> {coverageStatus?.distance.toFixed(2)} km
+                      </div>
                     </div>
                   )}
+
+                  {/* Coverage Status Message */}
+                  {coverageStatus && (
+                    <div className={`p-3 rounded-lg text-sm font-medium ${coverageStatus.within ? 'bg-green-50 text-green-800 border border-green-300' : 'bg-red-50 text-red-800 border border-red-300'}`}>
+                      {coverageStatus.within ? '✅' : '❌'} {coverageStatus.message}
+                    </div>
+                  )}
+
+                  {/* Info about coverage */}
+                  <div className="bg-blue-50 p-3 rounded-lg text-xs text-blue-800 border border-blue-300">
+                    📍 <span className="font-semibold">Sucursal:</span> {SUCURSAL_LOCATION.address}
+                    <br />
+                    <span className="font-semibold">Cobertura de entrega:</span> Dentro de {COVERAGE_RADIUS_KM} km
+                  </div>
                 </div>
 
                 {/* Action Buttons */}
@@ -547,10 +622,10 @@ export default function LocationPickerModal({
                   </button>
                   <button
                     onClick={handleConfirm}
-                    disabled={!selectedLocation || loading || mapError !== null}
+                    disabled={!selectedLocation || loading || !!mapError || (coverageStatus ? !coverageStatus.within : false)}
                     className="flex-1 px-4 py-2 rounded-lg bg-gradient-to-r from-green-400 to-green-500 text-white font-semibold hover:from-green-500 hover:to-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Confirmar Ubicación
+                    {coverageStatus && !coverageStatus.within ? 'Fuera de cobertura' : 'Confirmar Ubicación'}
                   </button>
                 </div>
               </DialogPanel>
