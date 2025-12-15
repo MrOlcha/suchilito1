@@ -188,7 +188,7 @@ async function sendTelegramMessage(message: string, recipient: string) {
 
 async function savePedidoToDatabase(orderData: OrderData) {
   try {
-    const response = await fetch('http://localhost:3000/api/pedidos-web', {
+    const response = await fetch('http://localhost:3000/pos/api/pedidos-web', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
