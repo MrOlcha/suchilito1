@@ -12,9 +12,9 @@
       "static/chunks/next-8c7b1679297233e4.js",
       "static/chunks/vendors-7f62f7e9e133c6b6.js",
       "static/chunks/main-app-1fbd95156448049d.js",
-      "static/chunks/721-ffa03e3774c23b1c.js",
+      "static/chunks/664-ece55c3ba67e5468.js",
       "static/css/eb4b9f4107e8e21d.css",
-      "static/chunks/app/layout-cacdee6530e17dc1.js"
+      "static/chunks/app/layout-bd9601a93e9020f6.js"
     ],
     "/cart/page": [
       "static/chunks/webpack-50ed7194e7ff0418.js",
@@ -28,8 +28,8 @@
       "static/chunks/next-8c7b1679297233e4.js",
       "static/chunks/vendors-7f62f7e9e133c6b6.js",
       "static/chunks/main-app-1fbd95156448049d.js",
-      "static/chunks/721-ffa03e3774c23b1c.js",
-      "static/chunks/app/delivery/page-ef26701aa98e062d.js"
+      "static/chunks/664-ece55c3ba67e5468.js",
+      "static/chunks/app/delivery/page-b1c48233ed6b9853.js"
     ],
     "/empresa/page": [
       "static/chunks/webpack-50ed7194e7ff0418.js",

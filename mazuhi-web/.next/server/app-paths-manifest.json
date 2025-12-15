@@ -7,6 +7,9 @@
   "/api/waiter-notification/route": "app/api/waiter-notification/route.js",
   "/cart/page": "app/cart/page.js",
   "/delivery/page": "app/delivery/page.js",
+  "/api/menu/route": "app/api/menu/route.js",
+  "/api/sucursales/route": "app/api/sucursales/route.js",
+  "/api/promociones/route": "app/api/promociones/route.js",
   "/empresa/page": "app/empresa/page.js",
   "/forgot-password/page": "app/forgot-password/page.js",
   "/historia/page": "app/historia/page.js",
@@ -20,8 +23,5 @@
   "/test-sheets/page": "app/test-sheets/page.js",
   "/test/page": "app/test/page.js",
   "/ubicacion/page": "app/ubicacion/page.js",
-  "/api/promociones/route": "app/api/promociones/route.js",
-  "/api/sucursales/route": "app/api/sucursales/route.js",
-  "/api/menu/route": "app/api/menu/route.js",
   "/facturacion/page": "app/facturacion/page.js"
 }
