@@ -7,14 +7,13 @@ import Link from 'next/link'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { useAuth } from '@/contexts/AuthContext'
-import { UserIcon, LockClosedIcon, EyeIcon, EyeSlashIcon, EnvelopeIcon } from '@heroicons/react/24/outline'
+import { UserIcon, ShieldCheckIcon, EnvelopeIcon } from '@heroicons/react/24/outline'
 
 export default function LoginPage() {
   const router = useRouter()
   const { login } = useAuth()
   const [correo, setCorreo] = useState('')
-  const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
+  const [pin, setPin] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -27,7 +26,7 @@ export default function LoginPage() {
       const response = await fetch('/pos/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ correo, password })
+        body: JSON.stringify({ correo, pin })
       })
 
       const data = await response.json()
@@ -73,7 +72,7 @@ export default function LoginPage() {
                 <UserIcon className="h-10 w-10 text-primary-300" />
               </motion.div>
               <h1 className="text-2xl font-bold text-white mb-2">Bienvenido de vuelta</h1>
-              <p className="text-white/90">Inicia sesión en tu cuenta</p>
+              <p className="text-white/90">Inicia sesión con tu PIN de 4 dígitos</p>
             </div>
 
             {/* Form */}
@@ -104,34 +103,29 @@ export default function LoginPage() {
                   </div>
                 </div>
 
-                {/* Password */}
+                {/* PIN */}
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                    Contraseña
+                  <label htmlFor="pin" className="block text-sm font-medium text-gray-700 mb-2">
+                    PIN de Acceso (4 dígitos)
                   </label>
                   <div className="relative">
                     <input
-                      id="password"
-                      type={showPassword ? 'text' : 'password'}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      id="pin"
+                      type="text"
+                      inputMode="numeric"
+                      value={pin}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, '').slice(0, 4)
+                        setPin(value)
+                      }}
+                      maxLength={4}
                       required
-                      className="w-full px-4 py-3 pl-12 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-300 focus:border-transparent transition-all duration-200"
-                      placeholder="••••••••"
+                      className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-300 focus:border-transparent transition-all duration-200 text-center font-mono text-lg font-semibold tracking-widest"
+                      placeholder="0000"
                     />
-                    <LockClosedIcon className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600 transition-colors"
-                    >
-                      {showPassword ? (
-                        <EyeSlashIcon className="h-5 w-5" />
-                      ) : (
-                        <EyeIcon className="h-5 w-5" />
-                      )}
-                    </button>
+                    <ShieldCheckIcon className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
                   </div>
+                  <p className="text-xs text-gray-500 mt-2">El PIN que registraste al crear tu cuenta</p>
                 </div>
 
                 {/* Remember me & Forgot password */}
@@ -147,12 +141,6 @@ export default function LoginPage() {
                       Recordarme
                     </label>
                   </div>
-                  <Link
-                    href="/forgot-password"
-                    className="text-sm text-primary-300 hover:text-primary-400 font-medium transition-colors"
-                  >
-                    ¿Olvidaste tu contraseña?
-                  </Link>
                 </div>
 
                 {/* Submit Button */}
