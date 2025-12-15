@@ -22,8 +22,8 @@ const BottomNavigation = () => {
   const pathname = usePathname()
   const { cart } = useCart()
 
-  // No mostrar navegación en la página /rest, /login y /registro
-  if (pathname === '/rest' || pathname === '/login' || pathname === '/registro') {
+  // No mostrar navegación en la página /rest, /login, /registro y cuando esté en checkout
+  if (pathname === '/rest' || pathname === '/login' || pathname === '/registro' || pathname === '/delivery') {
     return null
   }
 

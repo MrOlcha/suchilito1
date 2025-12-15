@@ -329,12 +329,12 @@ const MenuPage = () => {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="text-center mb-16 relative"
+          className="text-center mb-12 px-2 sm:px-0"
         >
-          <h1 className="text-5xl md:text-6xl font-bold text-[#374058] mb-4 font-condiment">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-[#374058] mb-4 font-condiment">
             Nuestro Menú
           </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-6">
+          <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto mb-6">
             Descubre una experiencia culinaria única con nuestros platillos artesanales, 
             preparados con mariscos frescos de Sinaloa y una deliciosa fusión de sabores orientales.
           </p>
@@ -343,12 +343,12 @@ const MenuPage = () => {
           <button
             onClick={handleRefreshMenu}
             disabled={isRefreshing}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[#E09E7D] hover:bg-[#d88a6a] text-white rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#E09E7D] hover:bg-[#d88a6a] text-white rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
           >
-            <svg className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className={`w-4 h-4 sm:w-5 sm:h-5 ${isRefreshing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
-            {isRefreshing ? 'Actualizando...' : 'Actualizar Menú'}
+            {isRefreshing ? 'Actualizando...' : 'Actualizar'}
           </button>
         </motion.div>
 
@@ -488,12 +488,12 @@ const MenuPage = () => {
                 </div>
               </motion.div>
 
-              {/* Menu Items Grid */}
+              {/* Menu Items Grid - Más compacto en móvil */}
               {currentCategory.items.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
                   {currentCategory.items.map((item: MenuItem, index: number) => {
                     // Debug: verificar que favorito esté llegando
-                    console.log(`� Item: ${item.nombre}, favorito: ${item.favorito}`);
+                    console.log(`🍣 Item: ${item.nombre}, favorito: ${item.favorito}`);
                     
                     return (
                     <motion.div
@@ -503,13 +503,13 @@ const MenuPage = () => {
                       initial="hidden"
                       animate="visible"
                       whileHover={{ y: -5 }}
-                      className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group"
+                      className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group flex flex-col"
                     >
-                      {/* Item Image/Emoji */}
-                      <div className="h-64 bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center relative group-hover:scale-105 transition-transform duration-300">
+                      {/* Item Image/Emoji - Altura adaptable */}
+                      <div className="h-48 sm:h-56 md:h-64 bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center relative group-hover:scale-105 transition-transform duration-300 flex-shrink-0">
                         
                         {/* Background emoji/image */}
-                        <span className="text-7xl z-0">{getCategoryEmoji(currentCategory.id)}</span>
+                        <span className="text-5xl sm:text-6xl md:text-7xl z-0">{getCategoryEmoji(currentCategory.id)}</span>
                         
                         {/* Image if available */}
                         {item.imagen_url && (
@@ -523,14 +523,14 @@ const MenuPage = () => {
                         {/* Favorite Badge - Top Right */}
                         {item.favorito && (
                           <div className="absolute top-2 right-2 z-10">
-                            <div className="bg-red-600 text-white px-3 py-2 rounded-full text-sm font-bold flex items-center gap-1 shadow-2xl border-2 border-white animate-pulse">
+                            <div className="bg-red-600 text-white px-2 sm:px-3 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-bold flex items-center gap-1 shadow-2xl border-2 border-white animate-pulse">
                               ❤️ Favorito
                             </div>
                           </div>
                         )}
                         
                         {/* Other Badges - Top Left */}
-                        <div className="absolute top-3 left-3 z-10 flex flex-col gap-2">
+                        <div className="absolute top-2 sm:top-3 left-2 sm:left-3 z-10 flex flex-col gap-2">
                           {getBadges(item).map((badge, idx) => (
                             <span
                               key={idx}
@@ -544,18 +544,18 @@ const MenuPage = () => {
                       </div>
 
                       {/* Item Content */}
-                      <div className="p-6">
-                        <div className="flex items-start justify-between mb-3">
-                          <h3 className="text-xl font-bold text-[#374058] group-hover:text-[#E09E7D] transition-colors duration-300">
+                      <div className="p-4 sm:p-6 flex flex-col flex-1">
+                        <div className="flex items-start justify-between mb-2 sm:mb-3 gap-2">
+                          <h3 className="text-lg sm:text-xl font-bold text-[#374058] group-hover:text-[#E09E7D] transition-colors duration-300 flex-1">
                             {item.nombre}
                           </h3>
-                          <span className="text-2xl font-bold text-[#E09E7D]">
+                          <span className="text-xl sm:text-2xl font-bold text-[#E09E7D] flex-shrink-0">
                             ${item.precio.toLocaleString()}
                           </span>
                         </div>
                         
                         {item.descripcion && (
-                          <p className="text-gray-600 text-sm mb-4 leading-relaxed">
+                          <p className="text-gray-600 text-xs sm:text-sm mb-3 sm:mb-4 leading-relaxed line-clamp-2 flex-1">
                             {item.descripcion}
                           </p>
                         )}
@@ -565,10 +565,10 @@ const MenuPage = () => {
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={() => handleAddToCart(item)}
-                          className="w-full bg-[#374058] hover:bg-[#2a2f42] text-white font-medium py-3 rounded-full transition-colors duration-300 flex items-center justify-center space-x-2"
+                          className="w-full bg-[#374058] hover:bg-[#2a2f42] text-white font-medium py-2 sm:py-3 rounded-full transition-colors duration-300 flex items-center justify-center space-x-2 text-sm sm:text-base"
                         >
-                          <PlusIcon className="w-5 h-5" />
-                          <span>Agregar a la Orden</span>
+                          <PlusIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+                          <span>Agregar</span>
                         </motion.button>
                       </div>
                     </motion.div>
