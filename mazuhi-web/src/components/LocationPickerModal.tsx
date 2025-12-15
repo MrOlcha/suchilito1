@@ -2,12 +2,19 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import { Dialog, DialogPanel, Transition } from '@headlessui/react';
-import { XMarkIcon, MapPinIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, MapPinIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
 interface LocationPickerModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectLocation: (address: string, lat: number, lng: number) => void;
+}
+
+interface PlacePrediction {
+  place_id: string;
+  description: string;
+  main_text: string;
+  secondary_text: string;
 }
 
 declare global {
@@ -42,41 +49,37 @@ export default function LocationPickerModal({
   onSelectLocation
 }: LocationPickerModalProps) {
   const mapRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
+  const autocompleteServiceRef = useRef<any>(null);
+  const placesServiceRef = useRef<any>(null);
+  const geocoderRef = useRef<any>(null);
+
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number; address: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [mapError, setMapError] = useState<string | null>(null);
+  const [searchInput, setSearchInput] = useState('');
+  const [predictions, setPredictions] = useState<PlacePrediction[]>([]);
+  const [showPredictions, setShowPredictions] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
 
   // Verificar disponibilidad de API de Google Maps
   const checkGoogleMapsAPI = async (attempt = 1, maxAttempts = 50): Promise<boolean> => {
     LOG.debug(`Checking Google Maps API (attempt ${attempt}/${maxAttempts})`);
     
-    // Verificar si está disponible
     if (window.google?.maps) {
       LOG.info(`✅ Google Maps API loaded successfully on attempt ${attempt}`);
       return true;
     }
 
-    // Si alcanzamos el máximo de intentos
     if (attempt >= maxAttempts) {
       LOG.error(`❌ Google Maps API not loaded after ${maxAttempts} attempts (${maxAttempts * 200}ms)`);
-      
-      // Debug: ver qué hay en window
       const googleKeys = Object.keys(window).filter(k => k.toLowerCase().includes('google'));
       LOG.debug('Google-related keys on window:', googleKeys);
-      
-      // Verificar si hay un error en la consola del navegador
-      LOG.warn('Posibles razones:');
-      LOG.warn('1. API Key inválida o no autorizada');
-      LOG.warn('2. Restricciones de dominio en Google Cloud Console');
-      LOG.warn('3. Problema de conexión a internet');
-      LOG.warn('4. Google Maps API deshabilitada en el proyecto de Google Cloud');
-      
       return false;
     }
 
-    // Esperar y reintentar
     await new Promise(resolve => setTimeout(resolve, 200));
     return checkGoogleMapsAPI(attempt + 1, maxAttempts);
   };
@@ -90,7 +93,6 @@ export default function LocationPickerModal({
 
     LOG.info('✅ Modal opened, waiting for DOM to be ready...');
     
-    // Esperar a que mapRef.current esté disponible (máximo 5 segundos)
     let attempts = 0;
     const maxAttempts = 50;
     
@@ -124,7 +126,6 @@ export default function LocationPickerModal({
       setMapError(null);
       setLoading(true);
 
-      // ==================== STEP 1: Verificar mapRef ====================
       LOG.info('📍 STEP 1: Verifying mapRef.current...');
       if (!mapRef.current) {
         const errorMsg = 'mapRef.current no disponible - el contenedor del mapa no existe';
@@ -135,7 +136,6 @@ export default function LocationPickerModal({
       }
       LOG.info('✅ STEP 1 OK: mapRef.current is available');
 
-      // ==================== STEP 2: Esperar Google Maps API ====================
       LOG.info('📍 STEP 2: Waiting for Google Maps API to load...');
       const apiLoaded = await checkGoogleMapsAPI();
       
@@ -148,7 +148,6 @@ export default function LocationPickerModal({
       }
       LOG.info('✅ STEP 2 OK: Google Maps API is available');
 
-      // ==================== STEP 3: Verificar clases necesarias ====================
       LOG.info('📍 STEP 3: Verifying required Google Maps classes...');
       
       if (!window.google.maps.Map) {
@@ -160,8 +159,8 @@ export default function LocationPickerModal({
       if (!window.google.maps.Geocoder) {
         throw new Error('Google Maps Geocoder class not available');
       }
-      if (!window.google.maps.Animation) {
-        throw new Error('Google Maps Animation class not available');
+      if (!window.google.maps.places?.AutocompleteService) {
+        throw new Error('Google Maps Places Autocomplete class not available');
       }
       
       LOG.info('✅ STEP 3 OK: All required classes available');
@@ -169,7 +168,6 @@ export default function LocationPickerModal({
       const defaultLocation = { lat: 24.2769, lng: -110.2708 }; // Mazatlán
       LOG.info('📍 Default location:', defaultLocation);
 
-      // ==================== STEP 4: Crear instancia del mapa ====================
       LOG.info('📍 STEP 4: Creating map instance...');
       const map = new window.google.maps.Map(mapRef.current, {
         zoom: 15,
@@ -185,7 +183,6 @@ export default function LocationPickerModal({
       mapInstanceRef.current = map;
       LOG.info('✅ STEP 4 OK: Map instance created successfully');
 
-      // ==================== STEP 5: Crear marcador ====================
       LOG.info('📍 STEP 5: Creating marker...');
       const marker = new window.google.maps.Marker({
         position: defaultLocation,
@@ -197,12 +194,16 @@ export default function LocationPickerModal({
       markerRef.current = marker;
       LOG.info('✅ STEP 5 OK: Marker created successfully');
 
-      // ==================== STEP 6: Inicializar Geocoder ====================
-      LOG.info('📍 STEP 6: Initializing Geocoder...');
+      LOG.info('📍 STEP 6: Initializing Geocoder and Places services...');
       const geocoder = new window.google.maps.Geocoder();
-      LOG.info('✅ STEP 6 OK: Geocoder initialized');
+      const autocompleteService = new window.google.maps.places.AutocompleteService();
+      const placesService = new window.google.maps.places.PlacesService(map);
+      
+      geocoderRef.current = geocoder;
+      autocompleteServiceRef.current = autocompleteService;
+      placesServiceRef.current = placesService;
+      LOG.info('✅ STEP 6 OK: Services initialized');
 
-      // ==================== STEP 7: Función para actualizar dirección ====================
       const updateAddress = async (lat: number, lng: number) => {
         LOG.debug(`Updating address for coordinates: (${lat.toFixed(4)}, ${lng.toFixed(4)})`);
         try {
@@ -222,8 +223,7 @@ export default function LocationPickerModal({
         }
       };
 
-      // ==================== STEP 8: Configurar event listeners ====================
-      LOG.info('📍 STEP 8: Setting up event listeners...');
+      LOG.info('📍 STEP 7: Setting up event listeners...');
       
       marker.addListener('dragend', () => {
         LOG.debug('Marker dragged');
@@ -242,12 +242,11 @@ export default function LocationPickerModal({
         updateAddress(lat, lng);
       });
       
-      LOG.info('✅ STEP 8 OK: Event listeners setup complete');
+      LOG.info('✅ STEP 7 OK: Event listeners setup complete');
 
-      // ==================== STEP 9: Obtener dirección inicial ====================
-      LOG.info('📍 STEP 9: Getting initial address...');
+      LOG.info('📍 STEP 8: Getting initial address...');
       await updateAddress(defaultLocation.lat, defaultLocation.lng);
-      LOG.info('✅ STEP 9 OK: Initial address retrieved');
+      LOG.info('✅ STEP 8 OK: Initial address retrieved');
 
       const totalTime = Date.now() - startTime;
       LOG.info(`🎉 MAP INITIALIZATION COMPLETED SUCCESSFULLY in ${totalTime}ms`);
@@ -258,6 +257,102 @@ export default function LocationPickerModal({
       const errorMessage = error instanceof Error ? error.message : 'Error al cargar el mapa. Por favor, intenta nuevamente.';
       setMapError(errorMessage);
       setLoading(false);
+    }
+  };
+
+  // Handle search input with debouncing
+  const handleSearchChange = async (value: string) => {
+    setSearchInput(value);
+    
+    if (value.length < 2) {
+      setPredictions([]);
+      setShowPredictions(false);
+      return;
+    }
+
+    setSearchLoading(true);
+    
+    try {
+      if (!autocompleteServiceRef.current) {
+        LOG.warn('Autocomplete service not ready');
+        return;
+      }
+
+      const response = await autocompleteServiceRef.current.getPlacePredictions({
+        input: value,
+        componentRestrictions: { country: 'mx' }, // Limitar a México
+      });
+
+      const formattedPredictions = response.predictions.map((p: any) => ({
+        place_id: p.place_id,
+        description: p.description,
+        main_text: p.structured_formatting?.main_text || p.description,
+        secondary_text: p.structured_formatting?.secondary_text || '',
+      }));
+
+      setPredictions(formattedPredictions);
+      setShowPredictions(true);
+      LOG.debug(`Found ${formattedPredictions.length} predictions for "${value}"`);
+    } catch (error) {
+      LOG.warn('Error getting predictions:', error);
+      setPredictions([]);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  // Handle selecting a prediction
+  const handleSelectPrediction = async (prediction: PlacePrediction) => {
+    LOG.info(`Selected prediction: ${prediction.description}`);
+    setSearchInput(prediction.description);
+    setShowPredictions(false);
+
+    try {
+      if (!placesServiceRef.current) {
+        LOG.warn('Places service not ready');
+        return;
+      }
+
+      // Get place details
+      const response = await new Promise((resolve, reject) => {
+        placesServiceRef.current.getDetails(
+          { placeId: prediction.place_id },
+          (place: any, status: any) => {
+            if (status === window.google.maps.places.PlacesServiceStatus.OK) {
+              resolve(place);
+            } else {
+              reject(new Error(`Places service error: ${status}`));
+            }
+          }
+        );
+      });
+
+      const place = response as any;
+      const lat = place.geometry.location.lat();
+      const lng = place.geometry.location.lng();
+
+      LOG.info(`Moving map to: ${lat}, ${lng}`);
+
+      // Update map and marker
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.panTo({ lat, lng });
+        mapInstanceRef.current.setZoom(18);
+      }
+
+      if (markerRef.current) {
+        markerRef.current.setPosition({ lat, lng });
+      }
+
+      // Update address
+      setSelectedLocation({
+        lat,
+        lng,
+        address: prediction.description,
+      });
+
+      LOG.info('✅ Location updated from search');
+    } catch (error) {
+      LOG.error('Error selecting prediction:', error);
     }
   };
 
@@ -315,6 +410,46 @@ export default function LocationPickerModal({
                   </button>
                 </div>
 
+                {/* Search Input */}
+                <div className="border-b border-gray-200 p-4 bg-gray-50">
+                  <div className="relative">
+                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                      <MagnifyingGlassIcon className="h-5 w-5" />
+                    </div>
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      placeholder="Busca tu ubicación (ej: Avenida Camarón Sábalo, Mazatlán)..."
+                      value={searchInput}
+                      onChange={(e) => handleSearchChange(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    />
+                    {searchLoading && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <div className="animate-spin h-5 w-5 border-2 border-orange-500 border-t-transparent rounded-full"></div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Predictions Dropdown */}
+                  {showPredictions && predictions.length > 0 && (
+                    <div className="absolute top-full left-4 right-4 mt-2 bg-white border border-gray-300 rounded-lg shadow-lg z-20 max-h-60 overflow-y-auto">
+                      {predictions.map((prediction) => (
+                        <button
+                          key={prediction.place_id}
+                          onClick={() => handleSelectPrediction(prediction)}
+                          className="w-full text-left px-4 py-3 hover:bg-orange-50 border-b border-gray-100 last:border-b-0 transition-colors"
+                        >
+                          <div className="font-medium text-gray-900">{prediction.main_text}</div>
+                          {prediction.secondary_text && (
+                            <div className="text-sm text-gray-600">{prediction.secondary_text}</div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 <div className="relative w-full h-96">
                   {/* Loading State */}
                   {loading && (
@@ -351,7 +486,16 @@ export default function LocationPickerModal({
                   <div ref={mapRef} className="w-full h-full rounded-b" />
                 </div>
 
-                {/* Footer */}
+                {/* Footer - Display selected location */}
+                <div className="border-t border-gray-200 bg-gray-50 px-6 py-3">
+                  {selectedLocation && (
+                    <div className="text-sm text-gray-700 mb-3">
+                      <span className="font-semibold">Ubicación seleccionada:</span> {selectedLocation.address}
+                    </div>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
                 <div className="border-t border-gray-200 bg-gray-50 px-6 py-4 flex gap-4">
                   <button
                     onClick={onClose}
